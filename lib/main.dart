@@ -3,6 +3,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:utp_flutter/app/routes/app_pages.dart';
 
 import 'firebase_options.dart';
 
@@ -91,6 +92,8 @@ class MyApp extends StatelessWidget {
     return GetMaterialApp(
       title: 'Stay&Co',
       debugShowCheckedModeBanner: false,
+      initialRoute: AppPages.initial,
+      getPages: AppPages.routes,
 
       // ==== THEME GLOBAL ====
       theme: ThemeData(
@@ -111,31 +114,6 @@ class MyApp extends StatelessWidget {
 
       // ==== HALAMAN AWAL (LOGIN, pakai modules/auth/LoginView) ====
       home: const LoginView(),
-
-      // ==== ROUTE GETX (GETPAGES) ====
-      getPages: [
-        GetPage(
-          name: '/chatbot',
-          page: () => const ChatbotView(),
-          binding: ChatbotBinding(),
-        ),
-        GetPage(
-          name: '/payment',
-          page: () => const PaymentView(),
-          binding: PaymentBinding(),
-        ),
-        GetPage(
-          name: '/chat-room',
-          page: () => const ChatRoomView(),
-          binding: ChatRoomBinding(),
-        ),
-        GetPage(
-          name: '/otp',
-          page: () => const OtpView(),
-          binding: OtpBinding(),
-        ),
-        // Kalau mau, nanti route lain bisa dipindah ke GetPage juga.
-      ],
 
       // ==== ROUTES BAWAAN FLUTTER MASIH BERFUNGSI ====
       routes: {

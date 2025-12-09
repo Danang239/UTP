@@ -1,4 +1,3 @@
-// lib/app_session.dart
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -9,6 +8,7 @@ class AppSession {
   static String? email;
   static String? role;
   static String? profileImg; // URL foto profil (boleh null)
+  static String? ownerId;    // kode owner seperti "owner_1"
 
   /// SIMPAN DAN LOAD DATA USER
   static Future<bool> saveUser(String phoneNumber) async {
@@ -40,6 +40,7 @@ class AppSession {
       email = data['email'] ?? "";
       role = data['role'] ?? "user";
       profileImg = data['profile_img'] ?? ""; // kosong = belum ada foto
+      ownerId = data['owner_id'] ?? "";       // 🔥 PENTING: baca owner_id di Firestore
 
       // SIMPAN KE LOCAL STORAGE (SharedPreferences)
       final prefs = await SharedPreferences.getInstance();
@@ -49,8 +50,10 @@ class AppSession {
       await prefs.setString('email', email!);
       await prefs.setString('role', role!);
       await prefs.setString('profile_img', profileImg ?? "");
+      await prefs.setString('ownerId', ownerId ?? "");
 
-      print("User data saved session: $phone | $email | $name | $profileImg");
+      print(
+          "User data saved session: phone=$phone | email=$email | name=$name | role=$role | ownerId=$ownerId");
       return true;
     } catch (e) {
       print("ERROR saveUser: $e");
@@ -68,6 +71,7 @@ class AppSession {
     email = prefs.getString('email');
     role = prefs.getString('role');
     profileImg = prefs.getString('profile_img');
+    ownerId = prefs.getString('ownerId');
 
     return userDocId != null;
   }
@@ -83,6 +87,7 @@ class AppSession {
     email = null;
     role = null;
     profileImg = null;
+    ownerId = null;
 
     print("User session cleared.");
   }
