@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:utp_flutter/app_session.dart'; // <-- TAMBAHAN
 import 'chat_room_viewmodel.dart';
 
 class ChatRoomView extends GetView<ChatRoomViewModel> {
@@ -29,18 +30,24 @@ class ChatRoomView extends GetView<ChatRoomViewModel> {
                       itemBuilder: (context, i) {
                         final msg = controller.messages[i].data();
                         final text = msg['text'] ?? '';
-                        final sender = msg['sender_id'];
+                        final String? sender = msg['sender_id'];
 
-                        final bool isMe = sender == controller.userId;
+                        // pakai id user yg sedang login (bisa owner / user)
+                        final bool isMe = sender == AppSession.userDocId;
 
                         return Align(
-                          alignment:
-                              isMe ? Alignment.centerRight : Alignment.centerLeft,
+                          alignment: isMe
+                              ? Alignment.centerRight
+                              : Alignment.centerLeft,
                           child: Container(
                             margin: const EdgeInsets.symmetric(
-                                vertical: 4, horizontal: 12),
+                              vertical: 4,
+                              horizontal: 12,
+                            ),
                             padding: const EdgeInsets.symmetric(
-                                vertical: 8, horizontal: 12),
+                              vertical: 8,
+                              horizontal: 12,
+                            ),
                             decoration: BoxDecoration(
                               color: isMe ? Colors.black : Colors.grey[300],
                               borderRadius: BorderRadius.circular(12),
@@ -53,7 +60,8 @@ class ChatRoomView extends GetView<ChatRoomViewModel> {
                             ),
                           ),
                         );
-                      }),
+                      },
+                    ),
             ),
 
             // INPUT AREA

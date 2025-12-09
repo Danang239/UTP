@@ -20,35 +20,35 @@ import 'modules/auth/otp/otp_binding.dart';
 import 'modules/auth/otp/otp_view.dart';
 
 // Home
-import 'modules/home/home_binding.dart';
-import 'modules/home/home_view.dart';
+import 'modules/user/home/home_binding.dart';
+import 'modules/user/home/home_view.dart';
 
 // Favorite
-import 'modules/favorite/favorite_binding.dart';
-import 'modules/favorite/favorite_view.dart';
+import 'modules/user/favorite/favorite_binding.dart';
+import 'modules/user/favorite/favorite_view.dart';
 
 // Pesan
-import 'modules/pesan/pesan_binding.dart';
-import 'modules/pesan/pesan_view.dart';
+import 'modules/user/pesan/pesan_binding.dart';
+import 'modules/user/pesan/pesan_view.dart';
 
 // Search (dipakai dari HomeView)
-import 'modules/search/search_binding.dart';
+import 'modules/user/search/search_binding.dart';
 
 // Profile (MVVM + GetX)
-import 'modules/profile/profile_binding.dart';
-import 'modules/profile/profile_view.dart';
+import 'modules/user/profile/profile_binding.dart';
+import 'modules/user/profile/profile_view.dart';
 
 // Chatbot (MODULE BARU MVVM + GetX)
-import 'modules/chatbot/chatbot_binding.dart';
-import 'modules/chatbot/chatbot_view.dart';
+import 'modules/user/chatbot/chatbot_binding.dart';
+import 'modules/user/chatbot/chatbot_view.dart';
 
 // Payment (MODULE BARU MVVM + GetX)
-import 'modules/payment/payment_binding.dart';
-import 'modules/payment/payment_view.dart';
+import 'modules/user/payment/payment_binding.dart';
+import 'modules/user/payment/payment_view.dart';
 
 // Chat room
-import 'modules/chat_room/chat_room_binding.dart';
-import 'modules/chat_room/chat_room_view.dart';
+import 'modules/user/chat_room/chat_room_binding.dart';
+import 'modules/user/chat_room/chat_room_view.dart';
 
 // ==== PAGE LAMA ====
 // Sudah TIDAK dipakai lagi, termasuk otp_page.dart

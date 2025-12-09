@@ -15,7 +15,7 @@ class PaymentView extends GetView<PaymentController> {
           icon: const Icon(Icons.arrow_back),
           onPressed: controller.goBackStep,
         ),
-        title: const Text('Detail page'),
+        title: const Text('Pembayaran'),
         centerTitle: true,
         actions: [
           IconButton(
@@ -55,6 +55,10 @@ class PaymentView extends GetView<PaymentController> {
     final dateText =
         '${controller.formatDate(controller.checkIn)}  -  ${controller.formatDate(controller.checkOut)}';
 
+    // AMBIL URL FOTO PERTAMA DARI ARGUMENTS (optional)
+    final args = Get.arguments as Map<String, dynamic>?;
+    final String? imageUrl = args?['imageUrl'] as String?;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -66,12 +70,28 @@ class PaymentView extends GetView<PaymentController> {
           ),
           child: Row(
             children: [
-              Container(
-                width: 80,
-                height: 80,
-                decoration: BoxDecoration(
-                  color: Colors.grey[400],
-                  borderRadius: BorderRadius.circular(12),
+              // === FOTO VILLA (SAMA KAYAK HOME) ===
+              ClipRRect(
+                borderRadius: BorderRadius.circular(12),
+                child: SizedBox(
+                  width: 80,
+                  height: 80,
+                  child: (imageUrl != null && imageUrl.isNotEmpty)
+                      ? Image.network(
+                          imageUrl,
+                          fit: BoxFit.cover,
+                          errorBuilder: (_, __, ___) => Container(
+                            color: Colors.grey[400],
+                            child: const Icon(Icons.image_not_supported),
+                          ),
+                        )
+                      : Container(
+                          color: Colors.grey[400],
+                          child: const Icon(
+                            Icons.home_work_outlined,
+                            color: Colors.white,
+                          ),
+                        ),
                 ),
               ),
               const SizedBox(width: 12),
@@ -409,7 +429,7 @@ class PaymentView extends GetView<PaymentController> {
             child: ClipRRect(
               borderRadius: BorderRadius.circular(24),
               child: Image.asset(
-                'assets/qris_example.png', // pastikan sudah didaftarkan di pubspec.yaml
+                'assets/qris_example.png',
                 fit: BoxFit.cover,
                 errorBuilder: (context, error, stack) {
                   return const Center(
@@ -445,7 +465,7 @@ class PaymentView extends GetView<PaymentController> {
     );
   }
 
-  // ====== STEP 3: Upload bukti (transfer & qris) ======
+  // ====== STEP 3: Upload bukti ======
   Widget _buildUploadProofStep() {
     final file = controller.proofFile.value;
 
@@ -531,9 +551,8 @@ class PaymentView extends GetView<PaymentController> {
         SizedBox(
           width: double.infinity,
           child: ElevatedButton(
-            onPressed: controller.saving.value
-                ? null
-                : controller.confirmPayment,
+            onPressed:
+                controller.saving.value ? null : controller.confirmPayment,
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.black,
               padding: const EdgeInsets.symmetric(vertical: 14),
@@ -587,7 +606,6 @@ class PaymentView extends GetView<PaymentController> {
           width: double.infinity,
           child: ElevatedButton(
             onPressed: () {
-              // balik ke root (MainPage) dengan navigator default
               Navigator.of(context).popUntil((route) => route.isFirst);
             },
             style: ElevatedButton.styleFrom(

@@ -9,7 +9,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:utp_flutter/app_session.dart';
 
 // >>> TAMBAH INI
-import 'package:utp_flutter/modules/profile/profile_viewmodel.dart';
+import 'package:utp_flutter/modules/user/profile/profile_viewmodel.dart';
 
 class EditProfileViewModel extends GetxController {
   // TEXT CONTROLLER (dipakai di EditProfileView)

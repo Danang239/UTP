@@ -2,7 +2,6 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:utp_flutter/app_session.dart';
-// import 'package:utp_flutter/pages/chat_room_page.dart'; // SUDAH TIDAK DIPAKAI
 import 'package:utp_flutter/services/user_collections.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -17,8 +16,38 @@ class DetailViewModel extends GetxController {
     if (id == null) throw 'User belum login';
     return id;
   }
+  String? get firstImageUrl {
+  final dynamic rawImages = villaData['images'];
 
-  // tanggal dipilih
+  if (rawImages is List && rawImages.isNotEmpty && rawImages.first is String) {
+    return rawImages.first as String;
+  } else if (rawImages is String) {
+    // kalau data lama masih string tunggal
+    return rawImages;
+  }
+  return null;
+  }
+  // ================== STATE SLIDER FOTO ==================
+  /// index foto yang sedang aktif di PageView
+  final currentImageIndex = 0.obs;
+
+  /// controller untuk PageView foto
+  late final PageController imagePageController;
+
+  /// ambil list URL gambar dari villaData['images']
+  List<String> get images {
+    final raw = villaData['images'];
+    if (raw is List) {
+      return raw.map((e) => e.toString()).toList();
+    }
+    return const [];
+  }
+
+  void onImagePageChanged(int index) {
+    currentImageIndex.value = index;
+  }
+
+  // ================== STATE TANGGAL ==================
   final checkIn = Rxn<DateTime>();
   final checkOut = Rxn<DateTime>();
 
@@ -36,6 +65,10 @@ class DetailViewModel extends GetxController {
   @override
   void onInit() {
     super.onInit();
+
+    // init controller untuk slider foto
+    imagePageController = PageController();
+
     final now = DateTime.now();
     focusedDay = DateTime(now.year, now.month, now.day);
     firstDay = DateTime(now.year, now.month, now.day);
@@ -45,7 +78,14 @@ class DetailViewModel extends GetxController {
     _loadBookedDates();
   }
 
-  // ============ UTIL ============
+  @override
+  void onClose() {
+    // dispose controller slider foto
+    imagePageController.dispose();
+    super.onClose();
+  }
+
+  // ================== UTIL ==================
 
   DateTime _normalize(DateTime d) => DateTime(d.year, d.month, d.day);
 
@@ -71,7 +111,7 @@ class DetailViewModel extends GetxController {
     DateTime day = _normalize(checkIn.value!);
     DateTime last = _normalize(checkOut.value!);
 
-    // Kalau user pilih check-in & check-out sama → anggap 1 malam
+    // kalau check-in == check-out → tetap hitung 1 malam
     if (!day.isBefore(last)) {
       final bool isWeekend =
           day.weekday == DateTime.saturday || day.weekday == DateTime.sunday;
@@ -79,8 +119,6 @@ class DetailViewModel extends GetxController {
     }
 
     int total = 0;
-
-    // Hitung semua hari di [checkIn, checkOut)
     while (day.isBefore(last)) {
       final bool isWeekend =
           day.weekday == DateTime.saturday || day.weekday == DateTime.sunday;
@@ -110,7 +148,7 @@ class DetailViewModel extends GetxController {
     return d.isAfter(start) && d.isBefore(end);
   }
 
-  // ============ LOAD BOOKED DATES ============
+  // ================== LOAD BOOKED DATES ==================
 
   Future<void> _loadBookedDates() async {
     try {
@@ -129,8 +167,13 @@ class DetailViewModel extends GetxController {
 
         if (status != 'paid') continue;
 
-        final checkInTs = data['check_in'] as Timestamp;
-        final checkOutTs = data['check_out'] as Timestamp;
+        final checkInRaw = data['check_in'];
+        final checkOutRaw = data['check_out'];
+
+        if (checkInRaw is! Timestamp || checkOutRaw is! Timestamp) continue;
+
+        final checkInTs = checkInRaw;
+        final checkOutTs = checkOutRaw;
 
         DateTime day = _normalize(checkInTs.toDate());
         final last = _normalize(checkOutTs.toDate());
@@ -147,7 +190,7 @@ class DetailViewModel extends GetxController {
     }
   }
 
-  // ============ PILIH TANGGAL ============
+  // ================== PILIH TANGGAL DI KALENDER ==================
 
   void onSelectDay(DateTime day, BuildContext context) {
     final normalizedDay = _normalize(day);
@@ -161,8 +204,9 @@ class DetailViewModel extends GetxController {
       if (isBooked(normalizedDay)) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content:
-                Text('Tanggal ini sudah dibooking, tidak bisa untuk check-in.'),
+            content: Text(
+              'Tanggal ini sudah dibooking, tidak bisa untuk check-in.',
+            ),
           ),
         );
         return;
@@ -179,7 +223,8 @@ class DetailViewModel extends GetxController {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
               content: Text(
-                  'Tanggal ini sudah dibooking, tidak bisa untuk check-in.'),
+                'Tanggal ini sudah dibooking, tidak bisa untuk check-in.',
+              ),
             ),
           );
           return;
@@ -205,7 +250,8 @@ class DetailViewModel extends GetxController {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text(
-                'Range tanggal ini melewati tanggal yang sudah dibooking. Silakan pilih range lain.'),
+              'Range tanggal ini melewati tanggal yang sudah dibooking. Silakan pilih range lain.',
+            ),
           ),
         );
         return;
@@ -219,7 +265,7 @@ class DetailViewModel extends GetxController {
     focusedDay = newFocused;
   }
 
-  // ============ CEK RANGE KE FIRESTORE ============
+  // ================== CEK RANGE KE FIRESTORE ==================
 
   Future<bool> isDateRangeAvailable() async {
     if (checkIn.value == null || checkOut.value == null) return false;
@@ -237,25 +283,26 @@ class DetailViewModel extends GetxController {
       final status = (data['status'] ?? '').toString();
       if (status != 'paid') continue;
 
-      final existingIn =
-          _normalize((data['check_in'] as Timestamp).toDate());
-      final existingOut =
-          _normalize((data['check_out'] as Timestamp).toDate());
+      final inRaw = data['check_in'];
+      final outRaw = data['check_out'];
+      if (inRaw is! Timestamp || outRaw is! Timestamp) continue;
+
+      final existingIn = _normalize(inRaw.toDate());
+      final existingOut = _normalize(outRaw.toDate());
 
       final bool overlap =
           existingIn.isBefore(end) && existingOut.isAfter(start);
 
-      if (overlap) {
-        return false;
-      }
+      if (overlap) return false;
     }
 
     return true;
   }
 
-  // ============ ACTION: BOOKING ============
+  // ================== ACTION: BOOKING ==================
 
   Future<void> createBooking(BuildContext context) async {
+    // CEK INPUT DULU
     if (checkIn.value == null || checkOut.value == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Lengkapi tanggal check-in & check-out')),
@@ -271,9 +318,38 @@ class DetailViewModel extends GetxController {
       return;
     }
 
+    // owner_id WAJIB ADA
+    final String? ownerId = villaData['owner_id']?.toString();
+    if (ownerId == null || ownerId.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Data pemilik villa tidak valid. Hubungi admin aplikasi.',
+          ),
+        ),
+      );
+      return;
+    }
+
+    final String villaName = villaData['name']?.toString() ?? 'Tanpa Nama';
+    final String villaLocation = villaData['location']?.toString() ?? '-';
+
+    final int totalPrice = calculateTotalPrice();
+    if (totalPrice <= 0) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Terjadi kesalahan dalam perhitungan harga.'),
+        ),
+      );
+      return;
+    }
+
+    late DocumentReference bookingRef;
+
     try {
       loadingBooking.value = true;
 
+      // CEK RANGE SEKALI LAGI
       final available = await isDateRangeAvailable();
       if (!available) {
         loadingBooking.value = false;
@@ -288,60 +364,63 @@ class DetailViewModel extends GetxController {
         return;
       }
 
-      final String ownerId = villaData['owner_id'] ?? '';
-
-      final int totalPrice = calculateTotalPrice();
-      if (totalPrice <= 0) {
-        loadingBooking.value = false;
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Terjadi kesalahan dalam perhitungan harga.'),
-          ),
-        );
-        return;
-      }
-
-      final bookingRef =
-          await FirebaseFirestore.instance.collection('bookings').add({
+      // BANGUN DATA BOOKING TANPA NILAI NULL
+      final Map<String, dynamic> data = {
         'user_id': userId,
         'villa_id': villaId,
         'owner_id': ownerId,
-        'villa_name': villaData['name'] ?? 'Tanpa Nama',
-        'villa_location': villaData['location'] ?? '-',
+        'villa_name': villaName,
+        'villa_location': villaLocation,
         'status': 'pending',
         'check_in': Timestamp.fromDate(checkIn.value!),
         'check_out': Timestamp.fromDate(checkOut.value!),
         'total_price': totalPrice,
-        'created_at': FieldValue.serverTimestamp(),
-      });
+        // untuk menghindari problem di web, pakai Timestamp.now()
+        'created_at': Timestamp.now(),
+      };
+
+      data.removeWhere((key, value) => value == null);
+
+      debugPrint('=== DATA BOOKING YANG DIKIRIM ===');
+      data.forEach((k, v) => debugPrint('$k : $v'));
+      debugPrint('=================================');
+
+      // SIMPAN KE FIRESTORE
+      bookingRef = await FirebaseFirestore.instance
+          .collection('bookings')
+          .add(data);
 
       loadingBooking.value = false;
-
-      // === PANGGIL PAYMENT MODULE VIA GETX ===
-      Get.toNamed(
-        '/payment',
-        arguments: {
-          'bookingId': bookingRef.id,
-          'villaName': villaData['name'] ?? 'Tanpa Nama',
-          'totalPrice': totalPrice,
-          'checkIn': checkIn.value!,
-          'checkOut': checkOut.value!,
-        },
-      );
-    } catch (e) {
+    } catch (e, st) {
       loadingBooking.value = false;
+      debugPrint('ERROR CREATE BOOKING: $e');
+      debugPrint('$st');
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Gagal membuat booking: $e')),
+        SnackBar(content: Text('Gagal membuat booking di server: $e')),
       );
+      return; // jangan lanjut ke payment
     }
+
+    // kalau sampai sini berarti booking berhasil dibuat
+    Get.toNamed(
+      '/payment',
+      arguments: {
+        'bookingId': bookingRef.id,
+        'villaName': villaName,
+        'totalPrice': totalPrice,
+        'checkIn': checkIn.value!,
+        'checkOut': checkOut.value!,
+        'imageUrl': firstImageUrl,
+      },
+    );
   }
 
-  // ============ ACTION: CHAT & MAPS ============
+  // ================== ACTION: CHAT & MAPS ==================
 
   void openChatRoom(BuildContext context) {
-    final String ownerId = villaData['owner_id'] ?? '';
+    final String? ownerId = villaData['owner_id']?.toString();
 
-    if (ownerId.isEmpty) {
+    if (ownerId == null || ownerId.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Data pemilik villa tidak tersedia')),
       );
@@ -356,14 +435,9 @@ class DetailViewModel extends GetxController {
       return;
     }
 
-    // PANGGIL MODULE CHAT_ROOM VIA GETX
     Get.toNamed(
       '/chat-room',
-      arguments: {
-        'villaId': villaId,
-        'ownerId': ownerId,
-        'userId': userId,
-      },
+      arguments: {'villaId': villaId, 'ownerId': ownerId, 'userId': userId},
     );
   }
 
@@ -391,7 +465,7 @@ class DetailViewModel extends GetxController {
     }
   }
 
-  // ============ FAVORIT ============
+  // ================== FAVORIT ==================
 
   Stream<bool> favoriteStream() {
     return UserCollections.isFavoriteStream(villaId);
@@ -401,9 +475,9 @@ class DetailViewModel extends GetxController {
     try {
       await UserCollections.toggleFavorite(villaId);
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Gagal mengubah favorit: $e')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Gagal mengubah favorit: $e')));
     }
   }
 }

@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:get/get.dart';
 import 'package:utp_flutter/app_session.dart';
+import 'package:utp_flutter/app/routes/app_routes.dart'; // ⬅️ TAMBAH INI
 
 class ProfileViewModel extends GetxController {
   final name = ''.obs;
@@ -67,10 +68,15 @@ class ProfileViewModel extends GetxController {
 
   /// Logout
   Future<void> logout() async {
+    // bersihkan session lokal
     await AppSession.clear();
     isLoggedIn.value = false;
     name.value = '';
     email.value = '';
     profileImg.value = '';
+
+    // KUNCI: balik ke halaman login via route name,
+    // supaya LoginBinding jalan dan LoginViewModel di-inject
+    Get.offAllNamed(Routes.login);
   }
 }

@@ -6,8 +6,8 @@ import 'package:table_calendar/table_calendar.dart';
 import 'detail_viewmodel.dart';
 
 // Tambahkan Chat Room
-import 'package:utp_flutter/modules/chat_room/chat_room_view.dart';
-import 'package:utp_flutter/modules/chat_room/chat_room_binding.dart';
+import 'package:utp_flutter/modules/user/chat_room/chat_room_view.dart';
+import 'package:utp_flutter/modules/user/chat_room/chat_room_binding.dart';
 
 class DetailView extends StatelessWidget {
   final String villaId;
@@ -44,10 +44,9 @@ class DetailView extends StatelessWidget {
           name,
           style: const TextStyle(fontWeight: FontWeight.bold),
         ),
-
         actions: [
           // ========================
-          // TOMBOL CHAT ROOM (BARU)
+          // TOMBOL CHAT ROOM
           // ========================
           IconButton(
             icon: const Icon(Icons.chat_bubble_outline),
@@ -58,7 +57,7 @@ class DetailView extends StatelessWidget {
                 arguments: {
                   'villaId': villaId,
                   'ownerId': ownerId,
-                  'userId': controller.uid, // PENTING!
+                  'userId': controller.uid,
                 },
               );
             },
@@ -116,14 +115,104 @@ class DetailView extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // FOTO ATAS
-            Container(
-              height: 220,
-              width: double.infinity,
-              color: Colors.grey.shade300,
+            // =============================
+            // FOTO ATAS (SLIDER)
+            // =============================
+            ClipRRect(
+              borderRadius: const BorderRadius.only(
+                bottomLeft: Radius.circular(24),
+                bottomRight: Radius.circular(24),
+              ),
+              child: SizedBox(
+                width: double.infinity,
+                child: controller.images.isEmpty
+                    ? Container(
+                        height: MediaQuery.of(context).size.width * 9 / 16,
+                        color: Colors.grey.shade300,
+                      )
+                    : Stack(
+                        children: [
+                          AspectRatio(
+                            aspectRatio: 16 / 9,
+                            child: PageView.builder(
+                              controller: controller.imagePageController,
+                              itemCount: controller.images.length,
+                              physics: const PageScrollPhysics(),
+                              onPageChanged: controller.onImagePageChanged,
+                              itemBuilder: (context, index) {
+                                final url = controller.images[index];
+                                return Image.network(
+                                  url,
+                                  width: double.infinity,
+                                  fit: BoxFit.cover, // isi penuh tanpa distorsi
+                                  filterQuality: FilterQuality.high,
+                                  loadingBuilder:
+                                      (context, child, loadingProgress) {
+                                    if (loadingProgress == null) return child;
+                                    return Container(
+                                      color: Colors.grey[200],
+                                      child: const Center(
+                                        child: CircularProgressIndicator(),
+                                      ),
+                                    );
+                                  },
+                                  errorBuilder: (context, error, stackTrace) {
+                                    return Container(
+                                      color: Colors.grey.shade300,
+                                      child: const Center(
+                                        child: Icon(
+                                          Icons.broken_image,
+                                          size: 40,
+                                        ),
+                                      ),
+                                    );
+                                  },
+                                );
+                              },
+                            ),
+                          ),
+
+                          // DOT INDICATOR
+                          Positioned(
+                            bottom: 10,
+                            left: 0,
+                            right: 0,
+                            child: Obx(() {
+                              final current =
+                                  controller.currentImageIndex.value;
+                              final total = controller.images.length;
+                              if (total <= 1) return const SizedBox.shrink();
+
+                              return Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: List.generate(total, (index) {
+                                  final isActive = index == current;
+                                  return AnimatedContainer(
+                                    duration:
+                                        const Duration(milliseconds: 200),
+                                    margin: const EdgeInsets.symmetric(
+                                        horizontal: 3),
+                                    width: isActive ? 18 : 8,
+                                    height: 8,
+                                    decoration: BoxDecoration(
+                                      color: isActive
+                                          ? Colors.white
+                                          : Colors.white.withOpacity(0.6),
+                                      borderRadius: BorderRadius.circular(10),
+                                    ),
+                                  );
+                                }),
+                              );
+                            }),
+                          ),
+                        ],
+                      ),
+              ),
             ),
 
-            // CONTAINER PUTIH
+            // =============================
+            // CONTAINER PUTIH KONTEN
+            // =============================
             Container(
               width: double.infinity,
               decoration: const BoxDecoration(

@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:get/get.dart';
+import 'package:utp_flutter/app_session.dart'; // <-- TAMBAHAN
 
 class ChatRoomViewModel extends GetxController {
   late String villaId;
@@ -12,6 +13,9 @@ class ChatRoomViewModel extends GetxController {
 
   DocumentReference<Map<String, dynamic>>? chatDoc;
   CollectionReference<Map<String, dynamic>>? messagesRef;
+
+  // helper: id user yg sedang login (bisa owner / user)
+  String? get currentUserId => AppSession.userDocId;
 
   @override
   void onInit() {
@@ -41,7 +45,7 @@ class ChatRoomViewModel extends GetxController {
       if (q.docs.isNotEmpty) {
         chatDoc = q.docs.first.reference;
       } else {
-        final newId = '${userId}_${ownerId}_${villaId}';
+        final newId = '${userId}_${ownerId}_$villaId';
         chatDoc = FirebaseFirestore.instance.collection('chats').doc(newId);
 
         await chatDoc!.set({
@@ -57,9 +61,10 @@ class ChatRoomViewModel extends GetxController {
       messagesRef = chatDoc!.collection('messages');
 
       // LISTENING / STREAM FIRESTORE
-      messagesRef!.orderBy("timestamp", descending: false).snapshots().listen((
-        snap,
-      ) {
+      messagesRef!
+          .orderBy("timestamp", descending: false)
+          .snapshots()
+          .listen((snap) {
         messages.assignAll(snap.docs);
       });
     } catch (e) {
@@ -76,11 +81,18 @@ class ChatRoomViewModel extends GetxController {
     final text = messageController.value.trim();
     if (text.isEmpty) return;
 
+    // ambil id user yg sedang login (bisa owner / user)
+    final senderId = currentUserId;
+    if (senderId == null || senderId.isEmpty) {
+      Get.snackbar("Error", "User belum login.");
+      return;
+    }
+
     messageController.value = "";
 
     try {
       await messagesRef!.add({
-        'sender_id': userId,
+        'sender_id': senderId, // <-- BUKAN lagi userId argumen
         'text': text,
         'timestamp': FieldValue.serverTimestamp(),
       });
@@ -88,6 +100,7 @@ class ChatRoomViewModel extends GetxController {
       await chatDoc!.set({
         'last_message': text,
         'last_timestamp': FieldValue.serverTimestamp(),
+        // field identitas room tetap sama
         'villa_id': villaId,
         'owner_id': ownerId,
         'user_id': userId,

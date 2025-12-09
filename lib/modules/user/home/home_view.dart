@@ -4,8 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:get/get.dart';
 
-import 'package:utp_flutter/modules/detail/detail_view.dart';
-import 'package:utp_flutter/modules/home/home_viewmodel.dart';
+import 'package:utp_flutter/modules/user/detail/detail_view.dart';
+import 'package:utp_flutter/modules/user/home/home_viewmodel.dart';
 import 'package:utp_flutter/services/user_collections.dart';
 
 class HomeView extends GetView<HomeViewModel> {
@@ -13,17 +13,14 @@ class HomeView extends GetView<HomeViewModel> {
 
   @override
   Widget build(BuildContext context) {
-    // sama seperti HomePage lama
     final CollectionReference villasRef =
         FirebaseFirestore.instance.collection('villas');
 
     return Scaffold(
       backgroundColor: Colors.white,
 
-      // tombol chatbot
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () {
-          // PANGGIL CHATBOT MODULE VIA GETX ROUTE
           Get.toNamed('/chatbot');
         },
         backgroundColor: Colors.black,
@@ -37,21 +34,18 @@ class HomeView extends GetView<HomeViewModel> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // ================= HEADER: LOGO + SEARCH PILL =================
+              // ================= HEADER =================
               Row(
                 children: [
-                  // LOGO DI KIRI (DIPERBESAR)
                   SizedBox(
                     height: 48,
                     width: 48,
                     child: Image.asset(
-                      'assets/logo_stayco.png',
+                      'assets/images/logo_stayco.png',
                       fit: BoxFit.contain,
                     ),
                   ),
                   const SizedBox(width: 12),
-
-                  // SEARCH PILL DI KANAN
                   Expanded(
                     child: GestureDetector(
                       onTap: () {
@@ -239,10 +233,29 @@ class _VillaCard extends StatelessWidget {
     return 0;
   }
 
+  /// Ambil URL foto pertama (kalau ada).
+  /// Bisa handle:
+  /// - images: ["url1","url2"]
+  /// - images: "url1"   (data lama)
+  String? _getFirstImageUrl() {
+    final dynamic rawImages = data['images'];
+
+    if (rawImages is List) {
+      if (rawImages.isNotEmpty && rawImages.first is String) {
+        return rawImages.first as String;
+      }
+    } else if (rawImages is String) {
+      return rawImages;
+    }
+
+    return null;
+  }
+
   @override
   Widget build(BuildContext context) {
     final name = data['name'] ?? 'Tanpa Nama';
     final weekday = _parsePrice(data['weekday_price']);
+    final String? firstImageUrl = _getFirstImageUrl();
 
     return GestureDetector(
       onTap: onTap,
@@ -265,14 +278,28 @@ class _VillaCard extends StatelessWidget {
             // foto + icon favorit
             Stack(
               children: [
-                Container(
-                  height: 130,
-                  decoration: BoxDecoration(
-                    color: Colors.grey[300],
-                    borderRadius: const BorderRadius.only(
-                      topLeft: Radius.circular(18),
-                      topRight: Radius.circular(18),
-                    ),
+                ClipRRect(
+                  borderRadius: const BorderRadius.only(
+                    topLeft: Radius.circular(18),
+                    topRight: Radius.circular(18),
+                  ),
+                  child: SizedBox(
+                    height: 130,
+                    width: double.infinity,
+                    child: firstImageUrl != null &&
+                            firstImageUrl.isNotEmpty
+                        ? Image.network(
+                            firstImageUrl,
+                            fit: BoxFit.cover,
+                            errorBuilder: (_, __, ___) => Container(
+                              color: Colors.grey[300],
+                              child: const Icon(Icons.image_not_supported),
+                            ),
+                          )
+                        : Container(
+                            color: Colors.grey[300],
+                            child: const Icon(Icons.home_work_outlined),
+                          ),
                   ),
                 ),
                 Positioned(
@@ -363,7 +390,6 @@ class _SearchVillaPageState extends State<SearchVillaPage> {
   bool _loading = false;
   List<QueryDocumentSnapshot> _results = [];
 
-  // daftar kategori
   final List<_CategoryItem> _categories = const [
     _CategoryItem(id: 'pool', label: 'Kolam renang', icon: Icons.pool_outlined),
     _CategoryItem(
@@ -374,7 +400,7 @@ class _SearchVillaPageState extends State<SearchVillaPage> {
     _CategoryItem(
       id: 'billiard',
       label: 'Meja billiard',
-      icon: Icons.sports_bar, // icon diganti yang tersedia
+      icon: Icons.sports_bar,
     ),
     _CategoryItem(
       id: 'big_villa',
@@ -390,10 +416,12 @@ class _SearchVillaPageState extends State<SearchVillaPage> {
 
   String? _selectedCategoryId;
 
-  // cari berdasarkan nama villa
+  // --- fungsi search, filter, nearest tetap sama seperti semula (dipotong biar singkat) ---
+  // (semua logika di bawah ini sama persis dengan kode kamu, hanya bagian tampilan list item yang kutambah gambar)
+
   Future<void> _searchByName(String text) async {
     text = text.trim();
-    _selectedCategoryId = null; // reset kategori ketika search manual
+    _selectedCategoryId = null;
 
     if (text.isEmpty) {
       setState(() => _results = []);
@@ -420,7 +448,6 @@ class _SearchVillaPageState extends State<SearchVillaPage> {
     }
   }
 
-  // filter berdasarkan kategori
   Future<void> _filterByCategory(String id) async {
     setState(() {
       _loading = true;
@@ -463,9 +490,7 @@ class _SearchVillaPageState extends State<SearchVillaPage> {
     }
   }
 
-  // "Terdekat dari lokasi anda"
   Future<void> _loadNearest() async {
-    // supaya tidak crash di web
     if (kIsWeb) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -486,7 +511,6 @@ class _SearchVillaPageState extends State<SearchVillaPage> {
     });
 
     try {
-      // cek + minta izin lokasi
       LocationPermission permission = await Geolocator.checkPermission();
       if (permission == LocationPermission.denied) {
         permission = await Geolocator.requestPermission();
@@ -505,12 +529,10 @@ class _SearchVillaPageState extends State<SearchVillaPage> {
         return;
       }
 
-      // posisi user
       final pos = await Geolocator.getCurrentPosition(
         desiredAccuracy: LocationAccuracy.high,
       );
 
-      // ambil semua villa
       final allSnap = await villasRef.get();
       final docs = allSnap.docs;
 
@@ -562,7 +584,7 @@ class _SearchVillaPageState extends State<SearchVillaPage> {
       body: SafeArea(
         child: Column(
           children: [
-            // ====== CARD PUTIH BESAR (SEARCH + SARAN + KATEGORI) ======
+            // ===== CARD SEARCH + KATEGORI =====
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16),
               child: Container(
@@ -584,7 +606,7 @@ class _SearchVillaPageState extends State<SearchVillaPage> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // search dalam card
+                    // search
                     Container(
                       height: 46,
                       decoration: BoxDecoration(
@@ -621,7 +643,7 @@ class _SearchVillaPageState extends State<SearchVillaPage> {
                     ),
                     const SizedBox(height: 12),
 
-                    // Tile "terdekat dari lokasi anda"
+                    // Tile terdekat
                     ListTile(
                       onTap: _loadNearest,
                       contentPadding: EdgeInsets.zero,
@@ -649,7 +671,7 @@ class _SearchVillaPageState extends State<SearchVillaPage> {
 
                     const SizedBox(height: 12),
 
-                    // ====== KATEGORI ======
+                    // kategori
                     SizedBox(
                       height: 40,
                       child: ListView.separated(
@@ -686,7 +708,7 @@ class _SearchVillaPageState extends State<SearchVillaPage> {
             ),
             const SizedBox(height: 8),
 
-            // ====== LIST HASIL ======
+            // ===== LIST HASIL =====
             Expanded(
               child: _loading
                   ? const Center(child: CircularProgressIndicator())
@@ -706,6 +728,17 @@ class _SearchVillaPageState extends State<SearchVillaPage> {
                             final name = data['name'] ?? 'Tanpa Nama';
                             final location = data['location'] ?? '-';
                             final weekdayPrice = data['weekday_price'];
+
+                            // ambil foto pertama juga untuk search list
+                            String? firstImageUrl;
+                            final dynamic rawImages = data['images'];
+                            if (rawImages is List &&
+                                rawImages.isNotEmpty &&
+                                rawImages.first is String) {
+                              firstImageUrl = rawImages.first as String;
+                            } else if (rawImages is String) {
+                              firstImageUrl = rawImages;
+                            }
 
                             return GestureDetector(
                               onTap: () {
@@ -734,13 +767,29 @@ class _SearchVillaPageState extends State<SearchVillaPage> {
                                 ),
                                 child: Row(
                                   children: [
-                                    Container(
-                                      width: 70,
-                                      height: 70,
-                                      decoration: BoxDecoration(
-                                        color: Colors.grey[300],
-                                        borderRadius:
-                                            BorderRadius.circular(12),
+                                    ClipRRect(
+                                      borderRadius: BorderRadius.circular(12),
+                                      child: SizedBox(
+                                        width: 70,
+                                        height: 70,
+                                        child: firstImageUrl != null &&
+                                                firstImageUrl.isNotEmpty
+                                            ? Image.network(
+                                                firstImageUrl,
+                                                fit: BoxFit.cover,
+                                                errorBuilder: (_, __, ___) =>
+                                                    Container(
+                                                  color: Colors.grey[300],
+                                                  child: const Icon(
+                                                      Icons.image_not_supported),
+                                                ),
+                                              )
+                                            : Container(
+                                                color: Colors.grey[300],
+                                                child: const Icon(
+                                                  Icons.home_work_outlined,
+                                                ),
+                                              ),
                                       ),
                                     ),
                                     const SizedBox(width: 12),

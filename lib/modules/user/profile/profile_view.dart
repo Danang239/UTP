@@ -4,12 +4,12 @@ import 'package:get/get.dart';
 
 import 'package:utp_flutter/modules/auth/login_view.dart';
 
-import 'package:utp_flutter/modules/my_bookings/my_bookings_binding.dart';
-import 'package:utp_flutter/modules/my_bookings/my_bookings_view.dart';
+import 'package:utp_flutter/modules/user/my_bookings/my_bookings_binding.dart';
+import 'package:utp_flutter/modules/user/my_bookings/my_bookings_view.dart';
 
-import 'package:utp_flutter/modules/edit_profile/edit_profile_binding.dart';
-import 'package:utp_flutter/modules/edit_profile/edit_profile_view.dart';
-import 'package:utp_flutter/modules/profile/profile_viewmodel.dart';
+import 'package:utp_flutter/modules/user/edit_profile/edit_profile_binding.dart';
+import 'package:utp_flutter/modules/user/edit_profile/edit_profile_view.dart';
+import 'package:utp_flutter/modules/user/profile/profile_viewmodel.dart';
 
 class ProfileView extends GetView<ProfileViewModel> {
   const ProfileView({super.key});

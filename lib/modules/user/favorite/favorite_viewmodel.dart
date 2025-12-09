@@ -4,7 +4,7 @@ import 'package:get/get.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:utp_flutter/app_session.dart';
 
-import '../../data/models/villa_favorite_model.dart';
+import '../../../data/models/villa_favorite_model.dart';
 import '../detail/detail_view.dart';
 
 class FavoriteViewModel extends GetxController {

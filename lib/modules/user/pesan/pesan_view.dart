@@ -3,7 +3,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
-import 'package:utp_flutter/modules/pesan/pesan_viewmodel.dart';
+import 'package:utp_flutter/modules/user/pesan/pesan_viewmodel.dart';
 
 class PesanView extends GetView<PesanViewModel> {
   const PesanView({super.key});

@@ -2,7 +2,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
-import '../../widgets/card_item.dart';
+import '../../../widgets/card_item.dart';
 import 'explore_viewmodel.dart';
 
 class ExploreView extends GetView<ExploreViewModel> {

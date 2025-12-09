@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 import 'search_viewmodel.dart';
-import 'package:utp_flutter/modules/detail/detail_view.dart';
+import 'package:utp_flutter/modules/user/detail/detail_view.dart';
 
 class SearchView extends GetView<SearchViewModel> {
   const SearchView({super.key});
