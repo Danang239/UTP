@@ -19,7 +19,7 @@ class AdminDashboardView extends GetView<AdminDashboardViewModel> {
           onPressed: () {
             Get.snackbar(
               'Floating Action',
-              'Aksi untuk menu "$title"',
+              'Aksi untuk menus "$title"',
               snackPosition: SnackPosition.BOTTOM,
             );
           },
