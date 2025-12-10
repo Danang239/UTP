@@ -3,8 +3,8 @@
 import 'package:get/get.dart';
 
 // ADMIN
-import 'package:utp_flutter/modules/admin/data_villa/admin_data_villa_binding.dart';
-import 'package:utp_flutter/modules/admin/data_villa/admin_data_villa_view.dart';
+import 'package:utp_flutter/modules/admin/dashboard/data_villa/admin_data_villa_binding.dart';
+import 'package:utp_flutter/modules/admin/dashboard/data_villa/admin_data_villa_view.dart';
 import 'package:utp_flutter/modules/admin/dashboard/admin_dashboard_binding.dart';
 import 'package:utp_flutter/modules/admin/dashboard/admin_dashboard_view.dart';
 import 'package:utp_flutter/modules/admin/admin_messages/admin_messages_binding.dart';
