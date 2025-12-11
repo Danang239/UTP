@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:utp_flutter/modules/admin/booking_payment/admin_booking_payment_view.dart';
 
 import '../admin_dashboard_viewmodel.dart';
 
@@ -37,7 +38,7 @@ class ContentAreaWidget extends GetView<AdminDashboardViewModel> {
           break;
 
         case 3:
-          child = const BookingPage();
+          child = const AdminBookingPaymentView();
           break;
 
         case 4:

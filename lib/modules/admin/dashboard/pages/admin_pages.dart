@@ -1,6 +1,8 @@
 // lib/modules/admin/pages/admin_pages.dart
 
 import 'package:get/get.dart';
+import 'package:utp_flutter/modules/admin/booking_payment/admin_booking_payment_binding.dart';
+import 'package:utp_flutter/modules/admin/booking_payment/admin_booking_payment_view.dart';
 import 'package:utp_flutter/modules/admin/dashboard/admin_dashboard_view.dart';
 import 'package:utp_flutter/modules/admin/dashboard/data_owner/admin_data_owner_binding.dart';
 import 'package:utp_flutter/modules/admin/dashboard/data_owner/admin_data_owner_view.dart';
@@ -47,6 +49,11 @@ final List<GetPage> adminPages = [
     page: () => AdminDataOwnerView(),
     binding: AdminDataOwnerBinding(),  // Menghubungkan Binding
     ),
+  GetPage(
+  name: '/admin-booking',
+  page: () => const AdminBookingPaymentView(),
+  binding: AdminBookingPaymentBinding(),
+),
 
   // tinggal nambah page lain di sini...
 ];

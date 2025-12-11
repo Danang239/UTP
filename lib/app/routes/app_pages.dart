@@ -79,7 +79,7 @@ class AppPages {
     // =====================
     GetPage(
       name: Routes.adminDashboard,
-      page: () => const AdminDashboardView(),
+      page: () =>  AdminDashboardView(),
       binding: AdminDashboardBinding(),
     ),
     GetPage(
