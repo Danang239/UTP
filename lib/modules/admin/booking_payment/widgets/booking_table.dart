@@ -17,7 +17,6 @@ class BookingTable extends GetView<AdminBookingPaymentViewModel> {
   }
 
   String _formatCurrency(int value) {
-    // simple: 2000000 -> "Rp 2.000.000"
     final s = value.toString();
     final buffer = StringBuffer();
     for (int i = 0; i < s.length; i++) {
@@ -74,22 +73,23 @@ class BookingTable extends GetView<AdminBookingPaymentViewModel> {
             ),
             columnSpacing: 24,
             columns: const [
-              DataColumn(label: Text('Nama')),
+              DataColumn(label: Text('Nama Villa')),  // Kolom pertama Nama Villa
+              DataColumn(label: Text('Nama')),        // Kolom kedua Nama
               DataColumn(label: Text('Metode')),
               DataColumn(label: Text('Bank/E-Wallet')),
               DataColumn(label: Text('Bukti Transfer')),
               DataColumn(label: Text('Total')),
               DataColumn(label: Text('Biaya admin 10%')),
               DataColumn(label: Text('Status')),
-              DataColumn(label: Text('Tanggal')),
+              DataColumn(label: Text('Pemilik')),    // Kolom Pemilik
               DataColumn(label: Text('Aksi')),
             ],
             rows: items.map((b) {
               return DataRow(
                 cells: [
-                  DataCell(Text(b.customerName)),
+                  DataCell(Text(b.villaName)),  // Nama Villa di posisi pertama
+                  DataCell(Text(b.customerName)),  // Nama di posisi kedua
                   DataCell(Text(b.paymentMethod)),
-                  // ⬇️ pakai field bank dari AdminBookingItem
                   DataCell(Text(b.bank.isEmpty ? '-' : b.bank)),
                   DataCell(
                     TextButton(
@@ -106,7 +106,7 @@ class BookingTable extends GetView<AdminBookingPaymentViewModel> {
                   DataCell(Text(_formatCurrency(b.totalPrice))),
                   DataCell(Text(_formatCurrency(b.adminFee))),
                   DataCell(BookingStatusBadge(status: b.status)),
-                  DataCell(Text(_formatDate(b.createdAt))),
+                  DataCell(Text(b.ownerId)),    // Menampilkan Pemilik
                   DataCell(BookingActionButtons(booking: b)),
                 ],
               );

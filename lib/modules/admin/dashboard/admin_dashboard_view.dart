@@ -39,7 +39,9 @@ class AdminDashboardView extends GetView<AdminDashboardViewModel> {
                   SizedBox(height: 16),
                   StatsSectionWidget(),
                   SizedBox(height: 16),
-                  Expanded(child: ContentAreaWidget()),
+                  Expanded(
+                    child: ContentAreaWidget(),
+                  ),
                 ],
               ),
             ),

@@ -103,7 +103,7 @@ class AdminBookingPaymentViewModel extends GetxController {
       }
 
       bookings.assignAll(items);
-      calculateIncome(); // Update pendapatan dan omset setelah data booking dimuat
+      calculateIncome(); // update pendapatan & omset setelah data booking dimuat
     } catch (e, st) {
       print('ERROR loadBookings: $e\n$st');
       errorMessage.value = e.toString();
@@ -124,7 +124,7 @@ class AdminBookingPaymentViewModel extends GetxController {
 
     if (customerName.trim().isEmpty && userId.isNotEmpty) {
       if (userNameCache.containsKey(userId)) {
-        customerName = userNameCache[userId]!; 
+        customerName = userNameCache[userId]!;
       } else {
         final userDoc = await _db.collection('users').doc(userId).get();
         if (userDoc.exists) {
@@ -152,7 +152,8 @@ class AdminBookingPaymentViewModel extends GetxController {
     final int adminFee = _numToInt(data['admin_fee']);
     final int ownerIncome = _numToInt(data['owner_income']);
 
-    final String paymentStatus = (data['payment_status'] ?? 'waiting_verification') as String;
+    final String paymentStatus =
+        (data['payment_status'] ?? 'waiting_verification') as String;
     final String status = (data['status'] ?? 'pending') as String;
 
     final bool hasPaymentProof = (data['has_payment_proof'] ?? false) as bool;
@@ -186,6 +187,7 @@ class AdminBookingPaymentViewModel extends GetxController {
   }
 
   /// Method untuk menghitung total pendapatan admin, owner, dan omset
+  /// ✅ SEKARANG: hanya hitung booking yang status-nya CONFIRMED
   Future<void> calculateIncome() async {
     try {
       final snap = await _db.collection('bookings').get();
@@ -195,12 +197,16 @@ class AdminBookingPaymentViewModel extends GetxController {
 
       for (final doc in snap.docs) {
         final data = doc.data();
+
+        // ✅ FILTER: hanya confirmed yang dihitung
+        final status = (data['status'] ?? '').toString();
+        if (status != 'confirmed') continue;
+
         adminIncome += _numToInt(data['admin_fee']);
         ownerIncome += _numToInt(data['owner_income']);
         revenue += _numToInt(data['total_price']);
       }
 
-      // Update observables
       totalAdminIncome.value = adminIncome;
       totalOwnerIncome.value = ownerIncome;
       totalRevenue.value = revenue;
@@ -236,7 +242,7 @@ class AdminBookingPaymentViewModel extends GetxController {
       print('ERROR confirmBooking: $e\n$st');
       Get.snackbar(
         'Gagal',
-        'Gagal mengkonfirmasi booking',
+        'Gagal mengkonfirmasi booking: $e',
         snackPosition: SnackPosition.BOTTOM,
       );
     } finally {
@@ -244,7 +250,7 @@ class AdminBookingPaymentViewModel extends GetxController {
     }
   }
 
-  /// Ubah status jadi pending lagi
+  /// ✅ Batalkan konfirmasi: status jadi pending lagi + reset uang
   Future<void> setPending(AdminBookingItem booking) async {
     try {
       isLoading.value = true;
@@ -260,6 +266,11 @@ class AdminBookingPaymentViewModel extends GetxController {
       await loadBookings();
     } catch (e, st) {
       print('ERROR setPending: $e\n$st');
+      Get.snackbar(
+        'Gagal',
+        'Gagal membatalkan konfirmasi: $e',
+        snackPosition: SnackPosition.BOTTOM,
+      );
     } finally {
       isLoading.value = false;
     }

@@ -129,4 +129,25 @@ class AdminDashboardViewModel extends GetxController {
       debugPrint('Error loadDashboardStats: $e');
     }
   }
+
+  /// Mengambil Nama Villa dan Pemilik berdasarkan ID Villa
+  Future<Map<String, String>> getVillaDetails(String villaId) async {
+    try {
+      DocumentSnapshot villaSnapshot = await FirebaseFirestore.instance
+          .collection('villas')
+          .doc(villaId)
+          .get();
+      
+      if (villaSnapshot.exists) {
+        var villaData = villaSnapshot.data() as Map<String, dynamic>;
+        String villaName = villaData['name'] ?? 'Unknown Villa';
+        String ownerName = villaData['owner_name'] ?? 'Unknown Owner';
+        return {'villaName': villaName, 'ownerName': ownerName};
+      } else {
+        return {'villaName': 'N/A', 'ownerName': 'N/A'};
+      }
+    } catch (e) {
+      return {'villaName': 'Error', 'ownerName': 'Error'};
+    }
+  }
 }
