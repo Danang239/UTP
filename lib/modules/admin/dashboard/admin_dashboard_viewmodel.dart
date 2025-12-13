@@ -67,70 +67,55 @@ class AdminDashboardViewModel extends GetxController {
     }
   }
 
-  /// Ambil semua statistik dashboard + list villa
   Future<void> loadDashboardStats() async {
     try {
-      // ===== 1. HITUNG DATA VILLA =====
-      final villasSnap =
-          await FirebaseFirestore.instance.collection('villas').get();
+      // ===== HITUNG DATA VILLA =====
+      final villasSnap = await FirebaseFirestore.instance.collection('villas').get();
       totalVilla.value = villasSnap.size;
 
-      // simpan list villa untuk halaman "Data Villa"
-      final List<Map<String, dynamic>> villaList = [];
-      for (final doc in villasSnap.docs) {
-        final data = doc.data();
-        villaList.add({
-          'id': doc.id,
-          'name': data['name'] ?? '',
-          'location': data['location'] ?? '',
-          'weekdayPrice': (data['weekday_price'] ?? 0).toDouble(),
-          'weekendPrice': (data['weekend_price'] ?? 0).toDouble(),
-          'capacity': data['capacity'] ?? 0,
-        });
-      }
-      villas.assignAll(villaList);
-
-      // ===== 2. HITUNG TOTAL PESANAN =====
-      final bookingsSnap =
-          await FirebaseFirestore.instance.collection('bookings').get();
+      // ===== HITUNG TOTAL PESANAN =====
+      final bookingsSnap = await FirebaseFirestore.instance.collection('bookings').get();
       totalPesanan.value = bookingsSnap.size;
 
-      // ===== 3. HITUNG RESCHEDULE =====
+      // ===== HITUNG RESCHEDULE =====
       final rescheduleSnap = await FirebaseFirestore.instance
           .collection('bookings')
           .where('status', isEqualTo: 'reschedule')
           .get();
       totalReschedule.value = rescheduleSnap.size;
 
-      // ===== 4. HITUNG PENDAPATAN & PER OWNER =====
+      // ===== HITUNG PENDAPATAN & PER OWNER =====
       double total = 0;
+      double totalAdminFee = 0; // Total Admin Fee
       final Map<String, double> tempOwnerMap = {};
 
       for (final doc in bookingsSnap.docs) {
         final data = doc.data();
-        final amount = (data['total_amount'] ?? 0).toDouble();
+        final amount = (data['total_price'] ?? 0).toDouble();  // Ubah total_amount ke total_price
+        final adminFee = (data['admin_fee'] ?? 0).toDouble();  // Admin Fee per booking
         total += amount;
+        totalAdminFee += adminFee;
 
-        // ambil owner_id dari booking (misal "owner_1")
+        // Ambil owner_id dari booking
         final ownerCode = (data['owner_id'] ?? '').toString();
         if (ownerCode.isNotEmpty) {
           final ownerShare = amount * 0.90; // 90% untuk owner
-          tempOwnerMap[ownerCode] =
-              (tempOwnerMap[ownerCode] ?? 0) + ownerShare;
+          tempOwnerMap[ownerCode] = (tempOwnerMap[ownerCode] ?? 0) + ownerShare;
         }
       }
 
+      // Update values
       totalPendapatan.value = total;
-      pendapatanAdmin.value = total * 0.10;
-      pendapatanOwner.value = total * 0.90;
+      pendapatanAdmin.value = totalAdminFee;  // Gunakan admin fee untuk total pendapatan admin
+      pendapatanOwner.value = total * 0.90;  // Total pendapatan untuk owner
+      ownerPendapatanMap.assignAll(tempOwnerMap); // Pendapatan per owner
 
-      ownerPendapatanMap.assignAll(tempOwnerMap);
     } catch (e) {
       debugPrint('Error loadDashboardStats: $e');
     }
   }
 
-  /// Mengambil Nama Villa dan Pemilik berdasarkan ID Villa
+  // Mengambil Nama Villa dan Pemilik berdasarkan ID Villa
   Future<Map<String, String>> getVillaDetails(String villaId) async {
     try {
       DocumentSnapshot villaSnapshot = await FirebaseFirestore.instance

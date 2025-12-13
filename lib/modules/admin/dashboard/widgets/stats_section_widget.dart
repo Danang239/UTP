@@ -7,15 +7,17 @@ import 'stat_card_widget.dart';
 class StatsSectionWidget extends GetView<AdminDashboardViewModel> {
   const StatsSectionWidget({super.key});
 
+  // Fungsi untuk menampilkan dialog pendapatan owner
   void _showOwnerPendapatanDialog() {
     Get.dialog(
       AlertDialog(
         title: const Text('Total Pendapatan Owner'),
         content: Obx(() {
+          // Memastikan data pendapatan owner sudah terisi dengan benar
           final entries = controller.ownerPendapatanMap.entries.toList();
           if (entries.isEmpty) {
             return const Text(
-              'Belum ada data pendapatan owner.\nPastikan booking sudah punya field owner_id & total_amount.',
+              'Belum ada data pendapatan owner.\nPastikan booking sudah punya field owner_id & total_price.',
             );
           }
           return SizedBox(
@@ -49,6 +51,7 @@ class StatsSectionWidget extends GetView<AdminDashboardViewModel> {
   @override
   Widget build(BuildContext context) {
     return Obx(() {
+      // Hanya tampilkan jika menu yang dipilih adalah Dashboard
       if (controller.selectedMenuIndex.value != 0) {
         return const SizedBox.shrink();
       }
@@ -57,6 +60,7 @@ class StatsSectionWidget extends GetView<AdminDashboardViewModel> {
       final pesanan = controller.totalPesanan.value.toString();
       final reschedule = controller.totalReschedule.value.toString();
 
+      // Format pendapatan admin dan owner
       final adminPendapatan =
           FormatHelper.formatRupiah(controller.pendapatanAdmin.value);
       final ownerPendapatan =
@@ -114,7 +118,7 @@ class StatsSectionWidget extends GetView<AdminDashboardViewModel> {
                     value: 'Rp $ownerPendapatan',
                     color: const Color(0xFFE8F5E9),
                     accentColor: const Color(0xFF66BB6A),
-                    onTap: _showOwnerPendapatanDialog,
+                    onTap: _showOwnerPendapatanDialog, // Tampilkan dialog saat di tap
                   ),
                 ),
               ],
