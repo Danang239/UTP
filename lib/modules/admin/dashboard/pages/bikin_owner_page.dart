@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
-import '../data_owner/admin_data_owner_view.dart';  // Gantilah dengan path yang sesuai
-import '../data_owner/admin_data_owner_viewmodel.dart';  // Gantilah dengan path yang sesuai
+import '../bikin_owner/admin_data_owner_view.dart';  // Gantilah dengan path yang sesuai
+import '../bikin_owner/admin_data_owner_viewmodel.dart';  // Gantilah dengan path yang sesuai
 
 class BikinOwnerPage extends StatelessWidget {
   BikinOwnerPage({super.key}) {

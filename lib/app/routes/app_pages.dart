@@ -1,8 +1,9 @@
 // lib/app/routes/app_pages.dart
 
 import 'package:get/get.dart';
-import 'package:utp_flutter/modules/admin/dashboard/data_owner/admin_data_owner_binding.dart';
-import 'package:utp_flutter/modules/admin/dashboard/data_owner/admin_data_owner_view.dart';
+import 'package:utp_flutter/modules/admin/dashboard/bikin_owner/admin_data_owner_binding.dart';
+import 'package:utp_flutter/modules/admin/dashboard/bikin_owner/admin_data_owner_view.dart';
+import 'package:utp_flutter/modules/admin/dashboard/bikin_owner/edit_owner/admin_owner_edit_view.dart';
 
 // ADMIN
 import 'package:utp_flutter/modules/admin/dashboard/data_villa/admin_data_villa_binding.dart';
@@ -35,6 +36,12 @@ import 'package:utp_flutter/modules/user/chat_room/chat_room_binding.dart';
 import 'package:utp_flutter/modules/user/chat_room/chat_room_view.dart';
 
 import 'app_routes.dart';
+
+// IMPORT HALAMAN DETAIL OWNER DAN EDIT OWNER
+import 'package:utp_flutter/modules/admin/dashboard/bikin_owner/detail_owner/admin_owner_detail_view.dart';
+import 'package:utp_flutter/modules/admin/dashboard/bikin_owner/detail_owner/admin_owner_detail_binding.dart';
+import 'package:utp_flutter/modules/admin/dashboard/bikin_owner/edit_owner/admin_owner_edit_view.dart';
+import 'package:utp_flutter/modules/admin/dashboard/bikin_owner/edit_owner/admin_owner_edit_binding.dart';
 
 class AppPages {
   static const initial = Routes.login;
@@ -93,11 +100,24 @@ class AppPages {
       binding: AdminDataVillaBinding(),
     ),
     GetPage(
-    name: '/admin_data_owner',
-    page: () => AdminDataOwnerView(),
-    binding: AdminDataOwnerBinding(),  // Menghubungkan Binding
+      name: '/admin_data_owner',
+      page: () => AdminDataOwnerView(),
+      binding: AdminDataOwnerBinding(),  // Menghubungkan Binding
     ),
 
+    // Menambahkan halaman untuk Detail Owner
+    GetPage(
+      name: '/ownerDetail', // Rute untuk halaman Detail Owner
+      page: () => AdminOwnerDetailView(),
+      binding: AdminOwnerDetailBinding(),
+    ),
+
+    // Menambahkan halaman untuk Edit Owner
+    GetPage(
+      name: '/editOwner', // Rute untuk halaman Edit Owner
+      page: () => AdminOwnerEditView(),
+      binding: AdminOwnerEditBinding(),
+    ),
 
     // =====================
     // OWNER

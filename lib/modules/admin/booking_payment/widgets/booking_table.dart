@@ -23,7 +23,7 @@ class BookingTable extends GetView<AdminBookingPaymentViewModel> {
       final idxFromEnd = s.length - i;
       buffer.write(s[i]);
       if (idxFromEnd > 1 && idxFromEnd % 3 == 1) {
-        buffer.write('.');
+        buffer.write('.'); // Separator ribuan
       }
     }
     return 'Rp ${buffer.toString()}';
@@ -81,6 +81,7 @@ class BookingTable extends GetView<AdminBookingPaymentViewModel> {
               DataColumn(label: Text('Total')),
               DataColumn(label: Text('Biaya admin 10%')),
               DataColumn(label: Text('Status')),
+              DataColumn(label: Text('Tanggal Pesan')),  // Kolom Tanggal Pesan
               DataColumn(label: Text('Pemilik')),    // Kolom Pemilik
               DataColumn(label: Text('Aksi')),
             ],
@@ -106,6 +107,7 @@ class BookingTable extends GetView<AdminBookingPaymentViewModel> {
                   DataCell(Text(_formatCurrency(b.totalPrice))),
                   DataCell(Text(_formatCurrency(b.adminFee))),
                   DataCell(BookingStatusBadge(status: b.status)),
+                  DataCell(Text(_formatDate(b.checkIn))),  // Menampilkan Tanggal Pesan
                   DataCell(Text(b.ownerId)),    // Menampilkan Pemilik
                   DataCell(BookingActionButtons(booking: b)),
                 ],

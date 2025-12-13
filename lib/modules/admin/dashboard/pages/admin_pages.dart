@@ -4,8 +4,8 @@ import 'package:get/get.dart';
 import 'package:utp_flutter/modules/admin/booking_payment/admin_booking_payment_binding.dart';
 import 'package:utp_flutter/modules/admin/booking_payment/admin_booking_payment_view.dart';
 import 'package:utp_flutter/modules/admin/dashboard/admin_dashboard_view.dart';
-import 'package:utp_flutter/modules/admin/dashboard/data_owner/admin_data_owner_binding.dart';
-import 'package:utp_flutter/modules/admin/dashboard/data_owner/admin_data_owner_view.dart';
+import 'package:utp_flutter/modules/admin/dashboard/bikin_owner/admin_data_owner_binding.dart';
+import 'package:utp_flutter/modules/admin/dashboard/bikin_owner/admin_data_owner_view.dart';
 import 'package:utp_flutter/modules/admin/dashboard/data_villa/admin_data_villa_binding.dart';
 import 'package:utp_flutter/modules/admin/dashboard/data_villa/admin_data_villa_view.dart';
 

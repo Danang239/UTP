@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:utp_flutter/modules/admin/dashboard/data_owner/admin_data_owner_viewmodel.dart';
+import 'package:utp_flutter/modules/admin/dashboard/bikin_owner/admin_data_owner_viewmodel.dart';
 
 class AdminDataOwnerView extends StatelessWidget {
   @override
@@ -19,11 +19,6 @@ class AdminDataOwnerView extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              '',
-              style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
-            ),
-            SizedBox(height: 8),
             // Menampilkan status loading atau error jika ada
             Obx(() {
               if (controller.isLoading.value) {
@@ -45,7 +40,7 @@ class AdminDataOwnerView extends StatelessWidget {
               if (owners.isEmpty) {
                 return const Center(
                   child: Text(
-                    'Belum ada data owner.\nTambah data owner dari aplikasi pengguna.',
+                    'Belum ada data owner.',
                     textAlign: TextAlign.center,
                   ),
                 );
@@ -99,7 +94,8 @@ class AdminDataOwnerView extends StatelessWidget {
                                     foregroundColor: Colors.white,
                                   ),
                                   onPressed: () {
-                                    // Aksi Edit
+                                    // Aksi Detail: Pindah ke halaman detail
+                                    Get.toNamed('/ownerDetail', arguments: owner.id);
                                   },
                                   child: const Text('Detail'),
                                 ),
@@ -112,7 +108,8 @@ class AdminDataOwnerView extends StatelessWidget {
                                     foregroundColor: Colors.white,
                                   ),
                                   onPressed: () {
-                                    // Aksi Edit
+                                    // Aksi Edit: Pindah ke halaman edit dengan data owner
+                                    Get.toNamed('/editOwner', arguments: owner.id);
                                   },
                                   child: const Text('Edit'),
                                 ),
