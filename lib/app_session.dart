@@ -7,18 +7,15 @@ class AppSession {
   static String? name;
   static String? email;
   static String? role;
-  static String? profileImg; // URL foto profil (boleh null)
-  static String? ownerId;    // kode owner seperti "owner_1"
+  static String? profileImg;
+  static String? ownerId;
 
-  /// SIMPAN DAN LOAD DATA USER
   static Future<bool> saveUser(String phoneNumber) async {
     try {
-      // Normalisasi nomor (pastikan tidak ada "0" depan)
       if (phoneNumber.startsWith("0")) {
         phoneNumber = phoneNumber.substring(1);
       }
 
-      /// CARI USER DI FIRESTORE
       final snap = await FirebaseFirestore.instance
           .collection('users')
           .where('phone', isEqualTo: phoneNumber)
@@ -33,16 +30,16 @@ class AppSession {
       final doc = snap.docs.first;
       final data = doc.data();
 
-      // SIMPAN KE MEMORY
       userDocId = doc.id;
       phone = data['phone'] ?? "";
       name = data['name'] ?? "";
       email = data['email'] ?? "";
       role = data['role'] ?? "user";
-      profileImg = data['profile_img'] ?? ""; // kosong = belum ada foto
-      ownerId = data['owner_id'] ?? "";       // 🔥 PENTING: baca owner_id di Firestore
+      profileImg = data['profile_img'] ?? "";
 
-      // SIMPAN KE LOCAL STORAGE (SharedPreferences)
+      // 🔥 FIX UTAMA DI SINI
+      ownerId = data['owner_id']?.toString().trim() ?? "";
+
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString('userDocId', userDocId!);
       await prefs.setString('phone', phone!);
@@ -53,7 +50,9 @@ class AppSession {
       await prefs.setString('ownerId', ownerId ?? "");
 
       print(
-          "User data saved session: phone=$phone | email=$email | name=$name | role=$role | ownerId=$ownerId");
+        "User session saved | role=$role | ownerId=$ownerId",
+      );
+
       return true;
     } catch (e) {
       print("ERROR saveUser: $e");
@@ -61,7 +60,6 @@ class AppSession {
     }
   }
 
-  /// AMBIL SESSION SAAT APLIKASI DIBUKA
   static Future<bool> loadSession() async {
     final prefs = await SharedPreferences.getInstance();
 
@@ -76,7 +74,6 @@ class AppSession {
     return userDocId != null;
   }
 
-  /// HAPUS SESSION (LOGOUT)
   static Future<void> clear() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.clear();

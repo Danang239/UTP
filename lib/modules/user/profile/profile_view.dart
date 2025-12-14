@@ -1,4 +1,3 @@
-// lib/modules/profile/profile_view.dart
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
@@ -12,7 +11,12 @@ import 'package:utp_flutter/modules/user/edit_profile/edit_profile_view.dart';
 import 'package:utp_flutter/modules/user/profile/profile_viewmodel.dart';
 
 class ProfileView extends GetView<ProfileViewModel> {
-  const ProfileView({super.key});
+  final VoidCallback onTapFavorite;
+
+  const ProfileView({
+    super.key,
+    required this.onTapFavorite,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -31,7 +35,6 @@ class ProfileView extends GetView<ProfileViewModel> {
         elevation: 0,
       ),
       body: Obx(() {
-        // satu-satunya Obx: tentukan login / belum login
         return controller.isLoggedIn.value
             ? _buildLoggedInUI()
             : _buildLoggedOutUI();
@@ -46,7 +49,6 @@ class ProfileView extends GetView<ProfileViewModel> {
     return Center(
       child: ElevatedButton(
         onPressed: () {
-          // pakai module auth/LoginView
           Get.offAll(() => const LoginView());
         },
         child: const Text("Masuk / Daftar"),
@@ -58,33 +60,26 @@ class ProfileView extends GetView<ProfileViewModel> {
   //  UI Jika SUDAH LOGIN
   // ===============================
   Widget _buildLoggedInUI() {
-    // di sini TIDAK pakai Obx lagi, cukup baca value Rx saja
     final nameRx = controller.name.value;
     final emailRx = controller.email.value;
 
-    final String name =
-        nameRx.isNotEmpty ? nameRx : "Pengguna";
-    final String email =
-        emailRx.isNotEmpty ? emailRx : "-";
+    final String name = nameRx.isNotEmpty ? nameRx : "Pengguna";
+    final String email = emailRx.isNotEmpty ? emailRx : "-";
 
-    // kalau di ViewModel kamu nama variabel fotonya beda,
-    // ganti baris ini sesuai punya kamu
-    final String profileImg =
-        (controller.profileImg.value).toString(); // asumsi RxString
+    final String profileImg = controller.profileImg.value.toString();
 
     return ListView(
       padding: const EdgeInsets.all(20),
       children: [
-        /// Foto Profil + Nama + Email (CENTER, sama persis ProfilePage lama)
+        /// Foto Profil
         Center(
           child: Column(
             children: [
               CircleAvatar(
                 radius: 55,
                 backgroundColor: Colors.grey[300],
-                backgroundImage: (profileImg.isNotEmpty)
-                    ? NetworkImage(profileImg)
-                    : null,
+                backgroundImage:
+                    profileImg.isNotEmpty ? NetworkImage(profileImg) : null,
                 child: profileImg.isEmpty
                     ? Icon(
                         Icons.person,
@@ -93,10 +88,7 @@ class ProfileView extends GetView<ProfileViewModel> {
                       )
                     : null,
               ),
-
               const SizedBox(height: 12),
-
-              // NAMA
               Text(
                 name,
                 style: const TextStyle(
@@ -104,10 +96,7 @@ class ProfileView extends GetView<ProfileViewModel> {
                   fontWeight: FontWeight.bold,
                 ),
               ),
-
               const SizedBox(height: 4),
-
-              // EMAIL
               Text(
                 email,
                 style: TextStyle(
@@ -121,7 +110,7 @@ class ProfileView extends GetView<ProfileViewModel> {
 
         const SizedBox(height: 30),
 
-        /// MENU-MENU
+        /// MENU
         _menuItem(
           Icons.shopping_bag_outlined,
           "Pesanan Saya",
@@ -134,17 +123,13 @@ class ProfileView extends GetView<ProfileViewModel> {
         _menuItem(
           Icons.favorite_border,
           "Favorit",
-          () {
-            // TODO: nanti kalau mau arahkan ke tab Favorit
-          },
+          onTapFavorite, // 🔥 NYAMBUNG KE TAB FAVORITE
         ),
 
         _menuItem(
           Icons.settings_outlined,
           "Pengaturan",
-          () {
-            // TODO: tambah halaman pengaturan kalau diperlukan
-          },
+          () {},
         ),
 
         _menuItem(
@@ -159,14 +144,12 @@ class ProfileView extends GetView<ProfileViewModel> {
         _menuItem(
           Icons.help_outline,
           "Bantuan",
-          () {
-            // TODO: tambah halaman bantuan
-          },
+          () {},
         ),
 
         const SizedBox(height: 30),
 
-        /// LOGOUT (abu gelap, full width)
+        /// LOGOUT
         ElevatedButton(
           style: ElevatedButton.styleFrom(
             backgroundColor: Colors.grey[800],
@@ -189,7 +172,7 @@ class ProfileView extends GetView<ProfileViewModel> {
   }
 
   // ===============================
-  //  WIDGET ITEM MENU
+  //  ITEM MENU
   // ===============================
   Widget _menuItem(IconData icon, String title, VoidCallback onTap) {
     return Container(

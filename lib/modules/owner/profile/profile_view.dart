@@ -3,6 +3,9 @@ import 'package:get/get.dart';
 
 import 'profile_viewmodel.dart';
 import 'owner_edit_profile_view.dart';
+import '../bookings/owner_bookings_view.dart';
+import '../bookings/owner_bookings_binding.dart';
+
 
 class OwnerProfileView extends GetView<OwnerProfileViewModel> {
   const OwnerProfileView({super.key});
@@ -96,14 +99,13 @@ class OwnerProfileView extends GetView<OwnerProfileViewModel> {
                       icon: Icons.receipt_long_outlined,
                       title: 'Bookings',
                       onTap: () {
-                        // nanti akan diarahkan ke halaman riwayat booking owner
-                        Get.snackbar(
-                          'Info',
-                          'Fitur riwayat bookings akan dibuat nanti.',
-                          snackPosition: SnackPosition.BOTTOM,
+                        Get.to(
+                          () => const OwnerBookingsView(),
+                          binding: OwnerBookingsBinding(),
                         );
                       },
                     ),
+
 
                     const SizedBox(height: 24),
 

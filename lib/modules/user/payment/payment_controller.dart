@@ -1,4 +1,6 @@
 // lib/modules/payment/payment_controller.dart
+import 'dart:typed_data';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
@@ -34,8 +36,8 @@ class PaymentController extends GetxController {
 
   String get selectedAccount => bankAccounts[selectedBank.value] ?? '-';
 
+  // (tetap seperti punyamu)
   String formatRupiah(int value) => 'Rp ${value.toString()}';
-
   String formatDate(DateTime d) => '${d.day}/${d.month}/${d.year}';
 
   SupabaseClient get _supabase => Supabase.instance.client;
@@ -53,12 +55,13 @@ class PaymentController extends GetxController {
       );
     }
 
-    // Sedikit lebih aman: pakai toString & parsing
     bookingId = args['bookingId']?.toString() ?? '';
     villaName = args['villaName']?.toString() ?? '';
     totalPrice = args['totalPrice'] is int
         ? args['totalPrice'] as int
         : int.tryParse(args['totalPrice']?.toString() ?? '0') ?? 0;
+
+    // ini kamu sudah pakai DateTime dari arguments
     checkIn = args['checkIn'] as DateTime;
     checkOut = args['checkOut'] as DateTime;
 
@@ -88,36 +91,58 @@ class PaymentController extends GetxController {
   }
 
   // =====================================================
-  // UPLOAD BUKTI KE SUPABASE STORAGE
+  // UPLOAD BUKTI KE SUPABASE STORAGE (FIXED)
   // =====================================================
+  String _normalizeExt(String fileName) {
+    final lower = fileName.toLowerCase();
+    if (!lower.contains('.')) return 'jpg';
+    final ext = lower.split('.').last;
+    if (ext == 'jpeg') return 'jpg';
+    if (ext == 'png') return 'png';
+    if (ext == 'jpg') return 'jpg';
+    return 'jpg';
+  }
+
+  String _contentTypeFromExt(String ext) {
+    // Supabase lebih aman kalau jpg -> image/jpeg
+    if (ext == 'png') return 'image/png';
+    return 'image/jpeg';
+  }
+
   Future<Map<String, String>> _uploadProofToSupabase() async {
     final file = proofFile.value!;
-    final bytes = await file.readAsBytes();
+    final Uint8List bytes = await file.readAsBytes();
 
-    // Tentukan ekstensi
     final originalName = file.name;
-    final ext = originalName.contains('.')
-        ? originalName.split('.').last
-        : 'jpg';
+    final ext = _normalizeExt(originalName);
 
-    // Path unik di bucket
     final String path =
         'payment_proofs/$bookingId-${DateTime.now().millisecondsSinceEpoch}.$ext';
 
-    // GANTI 'payment-proofs' dengan nama bucket kamu di Supabase Storage
-    final storage = _supabase.storage.from('payment');
+    final storage = _supabase.storage.from('payment'); // nama bucket kamu: payment
 
-    // Upload binary
+    // 🔥 FIX 403 "Invalid Compact JWS":
+    // Kadang ada sesi Supabase korup/invalid di local storage (terutama web),
+    // jadi request bawa Authorization JWT rusak.
+    // Ini TIDAK mengganggu Firebase login kamu.
+    try {
+      if (_supabase.auth.currentSession != null) {
+        await _supabase.auth.signOut();
+      }
+    } catch (_) {
+      // abaikan kalau signOut gagal, kita tetap coba upload
+    }
+
+    // ✅ Untuk Flutter web & mobile: uploadBinary paling aman untuk XFile bytes
     await storage.uploadBinary(
       path,
       bytes,
       fileOptions: FileOptions(
-        contentType: 'image/$ext',
         upsert: false,
+        contentType: _contentTypeFromExt(ext),
       ),
     );
 
-    // Ambil URL public
     final publicUrl = storage.getPublicUrl(path);
 
     return {
@@ -154,7 +179,7 @@ class PaymentController extends GetxController {
           FirebaseFirestore.instance.collection('bookings').doc(bookingId);
 
       await bookingRef.update({
-        // status booking tetap 'pending', tapi payment_status menandakan sudah ada bukti
+        // status booking tetap 'pending', admin nanti confirm jadi 'confirmed'
         'status': 'pending',
         'payment_status': 'waiting_verification',
         'payment_method': method.value,
@@ -166,15 +191,15 @@ class PaymentController extends GetxController {
         'payment_proof_uploaded_at': FieldValue.serverTimestamp(),
       });
 
-      saving.value = false;
       step.value = 4; // sukses
     } catch (e) {
-      saving.value = false;
       Get.snackbar(
         'Error',
         'Gagal mengkonfirmasi pembayaran: $e',
         snackPosition: SnackPosition.BOTTOM,
       );
+    } finally {
+      saving.value = false;
     }
   }
 }

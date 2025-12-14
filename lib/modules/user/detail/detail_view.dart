@@ -357,9 +357,11 @@ class DetailView extends StatelessWidget {
                       ),
                       const SizedBox(height: 6),
                       const Text(
-                        "• Abu-abu = tanggal sudah lewat\n• Merah = tanggal sudah dibooking",
+                        "• Abu-abu = tanggal sudah lewat\n"
+                        "• Merah = tanggal sudah dibooking (termasuk pending)",
                         style: TextStyle(fontSize: 11),
                       ),
+
                       const SizedBox(height: 12),
 
                       if (controller.loadingCalendar.value)
