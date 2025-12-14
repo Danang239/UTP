@@ -23,7 +23,7 @@ class BookingTable extends GetView<AdminBookingPaymentViewModel> {
       final idxFromEnd = s.length - i;
       buffer.write(s[i]);
       if (idxFromEnd > 1 && idxFromEnd % 3 == 1) {
-        buffer.write('.'); // Separator ribuan
+        buffer.write('.');
       }
     }
     return 'Rp ${buffer.toString()}';
@@ -49,7 +49,7 @@ class BookingTable extends GetView<AdminBookingPaymentViewModel> {
       final items = controller.bookings;
       if (items.isEmpty) {
         return const Center(
-          child: Text('Belum ada data booking.'),
+          child: Text('Belum ada data booking pada periode ini.'),
         );
       }
 
@@ -65,54 +65,65 @@ class BookingTable extends GetView<AdminBookingPaymentViewModel> {
             ),
           ],
         ),
-        child: SingleChildScrollView(
-          scrollDirection: Axis.horizontal,
-          child: DataTable(
-            headingRowColor: MaterialStateProperty.all(
-              const Color(0xFFF4F0FF),
-            ),
-            columnSpacing: 24,
-            columns: const [
-              DataColumn(label: Text('Nama Villa')),  // Kolom pertama Nama Villa
-              DataColumn(label: Text('Nama')),        // Kolom kedua Nama
-              DataColumn(label: Text('Metode')),
-              DataColumn(label: Text('Bank/E-Wallet')),
-              DataColumn(label: Text('Bukti Transfer')),
-              DataColumn(label: Text('Total')),
-              DataColumn(label: Text('Biaya admin 10%')),
-              DataColumn(label: Text('Status')),
-              DataColumn(label: Text('Tanggal Pesan')),  // Kolom Tanggal Pesan
-              DataColumn(label: Text('Pemilik')),    // Kolom Pemilik
-              DataColumn(label: Text('Aksi')),
-            ],
-            rows: items.map((b) {
-              return DataRow(
-                cells: [
-                  DataCell(Text(b.villaName)),  // Nama Villa di posisi pertama
-                  DataCell(Text(b.customerName)),  // Nama di posisi kedua
-                  DataCell(Text(b.paymentMethod)),
-                  DataCell(Text(b.bank.isEmpty ? '-' : b.bank)),
-                  DataCell(
-                    TextButton(
-                      onPressed: () {
-                        BookingProofDialog.show(
-                          context,
-                          url: b.paymentProofUrl,
-                          fileName: b.paymentProofFileName,
-                        );
-                      },
-                      child: const Text('Lihat'),
-                    ),
-                  ),
-                  DataCell(Text(_formatCurrency(b.totalPrice))),
-                  DataCell(Text(_formatCurrency(b.adminFee))),
-                  DataCell(BookingStatusBadge(status: b.status)),
-                  DataCell(Text(_formatDate(b.checkIn))),  // Menampilkan Tanggal Pesan
-                  DataCell(Text(b.ownerId)),    // Menampilkan Pemilik
-                  DataCell(BookingActionButtons(booking: b)),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(16),
+          child: SingleChildScrollView(
+            // ✅ scroll vertikal (kalau data banyak)
+            child: SingleChildScrollView(
+              // ✅ scroll horizontal (kalau kolom banyak)
+              scrollDirection: Axis.horizontal,
+              child: DataTable(
+                headingRowColor: MaterialStateProperty.all(
+                  const Color(0xFFF4F0FF),
+                ),
+                columnSpacing: 24,
+                columns: const [
+                  DataColumn(label: Text('Nama Villa')),
+                  DataColumn(label: Text('Nama')),
+                  DataColumn(label: Text('Metode')),
+                  DataColumn(label: Text('Bank/E-Wallet')),
+                  DataColumn(label: Text('Bukti Transfer')),
+                  DataColumn(label: Text('Total')),
+                  DataColumn(label: Text('Biaya admin 10%')),
+                  DataColumn(label: Text('Status')),
+                  DataColumn(label: Text('Tanggal Pesan')),
+                  DataColumn(label: Text('Check-in')),
+                  DataColumn(label: Text('Pemilik')),
+                  DataColumn(label: Text('Aksi')),
                 ],
-              );
-            }).toList(),
+                rows: items.map((b) {
+                  return DataRow(
+                    cells: [
+                      DataCell(Text(b.villaName)),
+                      DataCell(Text(b.customerName)),
+                      DataCell(Text(b.paymentMethod)),
+                      DataCell(Text(b.bank.isEmpty ? '-' : b.bank)),
+                      DataCell(
+                        TextButton(
+                          onPressed: () {
+                            BookingProofDialog.show(
+                              context,
+                              url: b.paymentProofUrl ?? '',
+                              fileName: b.paymentProofFileName ?? '',
+                            );
+                          },
+                          child: const Text('Lihat'),
+                        ),
+                      ),
+                      DataCell(Text(_formatCurrency(b.totalPrice))),
+                      DataCell(Text(_formatCurrency(b.adminFee))),
+                      DataCell(BookingStatusBadge(status: b.status)),
+                      // ✅ tanggal pesan = created_at
+                      DataCell(Text(_formatDate(b.createdAt))),
+                      // ✅ tanggal check-in
+                      DataCell(Text(_formatDate(b.checkIn))),
+                      DataCell(Text(b.ownerId)),
+                      DataCell(BookingActionButtons(booking: b)),
+                    ],
+                  );
+                }).toList(),
+              ),
+            ),
           ),
         ),
       );

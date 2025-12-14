@@ -11,7 +11,11 @@ class StatsSectionWidget extends GetView<AdminDashboardViewModel> {
   void _showOwnerPendapatanDialog() {
     Get.dialog(
       AlertDialog(
-        title: const Text('Total Pendapatan Owner'),
+        title: Obx(() {
+          final m = controller.selectedMonth.value.toString().padLeft(2, '0');
+          final y = controller.selectedYear.value.toString();
+          return Text('Total Pendapatan Owner ($m/$y)');
+        }),
         content: Obx(() {
           // Memastikan data pendapatan owner sudah terisi dengan benar
           final entries = controller.ownerPendapatanMap.entries.toList();

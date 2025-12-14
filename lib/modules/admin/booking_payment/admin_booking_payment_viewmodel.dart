@@ -20,7 +20,7 @@ class AdminBookingItem {
   final int ownerIncome;
   final String paymentStatus; // "waiting_verification" / ...
   final String status; // "pending" / "confirmed"
-  final DateTime? createdAt;
+  final DateTime? createdAt; // ✅ tanggal pesan (created_at)
   final bool hasPaymentProof;
   final String? paymentProofUrl;
   final String? paymentProofFileName;
@@ -63,13 +63,24 @@ class AdminBookingPaymentViewModel extends GetxController {
   final isLoading = false.obs;
   final bookings = <AdminBookingItem>[].obs;
   final errorMessage = ''.obs;
-  final totalAdminIncome = 0.obs; // Pendapatan Admin
-  final totalOwnerIncome = 0.obs; // Pendapatan Owner
-  final totalRevenue = 0.obs; // Total Omset Bulanan
+
+  final totalAdminIncome = 0.obs; // confirmed & periode
+  final totalOwnerIncome = 0.obs; // confirmed & periode
+  final totalRevenue = 0.obs; // confirmed & periode
+
+  // ✅ Filter Bulan/Tahun
+  final selectedMonth = DateTime.now().month.obs; // 1-12
+  final selectedYear = DateTime.now().year.obs;
 
   @override
   void onInit() {
     super.onInit();
+    loadBookings();
+  }
+
+  void setMonthYear({required int month, required int year}) {
+    selectedMonth.value = month;
+    selectedYear.value = year;
     loadBookings();
   }
 
@@ -86,13 +97,28 @@ class AdminBookingPaymentViewModel extends GetxController {
     return null;
   }
 
+  DateTime _startOfMonth(int year, int month) => DateTime(year, month, 1);
+  DateTime _startOfNextMonth(int year, int month) => DateTime(year, month + 1, 1);
+
   Future<void> loadBookings() async {
     try {
       isLoading.value = true;
       errorMessage.value = '';
 
+      final int m = selectedMonth.value;
+      final int y = selectedYear.value;
+
+      final DateTime from = _startOfMonth(y, m);
+      final DateTime to = _startOfNextMonth(y, m);
+
+      final Timestamp fromTs = Timestamp.fromDate(from);
+      final Timestamp toTs = Timestamp.fromDate(to);
+
+      // ✅ ambil booking sesuai periode (created_at)
       final snap = await _db
           .collection('bookings')
+          .where('created_at', isGreaterThanOrEqualTo: fromTs)
+          .where('created_at', isLessThan: toTs)
           .orderBy('created_at', descending: true)
           .get();
 
@@ -103,11 +129,17 @@ class AdminBookingPaymentViewModel extends GetxController {
       }
 
       bookings.assignAll(items);
-      calculateIncome(); // update pendapatan & omset setelah data booking dimuat
+
+      // hitung pendapatan dari list yang sudah difilter
+      calculateIncomeFromLoadedList();
     } catch (e, st) {
+      // ignore: avoid_print
       print('ERROR loadBookings: $e\n$st');
       errorMessage.value = e.toString();
       bookings.clear();
+      totalAdminIncome.value = 0;
+      totalOwnerIncome.value = 0;
+      totalRevenue.value = 0;
     } finally {
       isLoading.value = false;
     }
@@ -119,8 +151,8 @@ class AdminBookingPaymentViewModel extends GetxController {
   ) async {
     final data = doc.data();
 
-    final String userId = (data['user_id'] ?? '') as String;
-    String customerName = (data['customer_name'] ?? '') as String;
+    final String userId = (data['user_id'] ?? '').toString();
+    String customerName = (data['customer_name'] ?? '').toString();
 
     if (customerName.trim().isEmpty && userId.isNotEmpty) {
       if (userNameCache.containsKey(userId)) {
@@ -128,7 +160,7 @@ class AdminBookingPaymentViewModel extends GetxController {
       } else {
         final userDoc = await _db.collection('users').doc(userId).get();
         if (userDoc.exists) {
-          customerName = (userDoc.data()?['name'] ?? '-') as String;
+          customerName = (userDoc.data()?['name'] ?? '-').toString();
           userNameCache[userId] = customerName;
         } else {
           customerName = '-';
@@ -137,28 +169,28 @@ class AdminBookingPaymentViewModel extends GetxController {
     }
     if (customerName.trim().isEmpty) customerName = '-';
 
-    final String customerEmail = (data['customer_email'] ?? '-') as String;
-    final String customerPhone = (data['customer_phone'] ?? '-') as String;
+    final String customerEmail = (data['customer_email'] ?? '-').toString();
+    final String customerPhone = (data['customer_phone'] ?? '-').toString();
 
-    final String villaId = (data['villa_id'] ?? '') as String;
-    final String villaName = (data['villa_name'] ?? '-') as String;
-    final String villaLocation = (data['villa_location'] ?? '-') as String;
-    final String ownerId = (data['owner_id'] ?? '') as String;
+    final String villaId = (data['villa_id'] ?? '').toString();
+    final String villaName = (data['villa_name'] ?? '-').toString();
+    final String villaLocation = (data['villa_location'] ?? '-').toString();
+    final String ownerId = (data['owner_id'] ?? '').toString();
 
-    final String paymentMethod = (data['payment_method'] ?? '-') as String;
-    final String bank = (data['bank'] ?? '-') as String;
+    final String paymentMethod = (data['payment_method'] ?? '-').toString();
+    final String bank = (data['bank'] ?? '-').toString();
 
     final int totalPrice = _numToInt(data['total_price']);
     final int adminFee = _numToInt(data['admin_fee']);
     final int ownerIncome = _numToInt(data['owner_income']);
 
     final String paymentStatus =
-        (data['payment_status'] ?? 'waiting_verification') as String;
-    final String status = (data['status'] ?? 'pending') as String;
+        (data['payment_status'] ?? 'waiting_verification').toString();
+    final String status = (data['status'] ?? 'pending').toString();
 
-    final bool hasPaymentProof = (data['has_payment_proof'] ?? false) as bool;
-    final String? proofFileName = data['payment_proof_file_name'] as String?;
-    final String? proofUrl = data['payment_proof_url'] as String?;
+    final bool hasPaymentProof = (data['has_payment_proof'] ?? false) == true;
+    final String? proofFileName = data['payment_proof_file_name']?.toString();
+    final String? proofUrl = data['payment_proof_url']?.toString();
 
     return AdminBookingItem(
       id: doc.id,
@@ -172,7 +204,7 @@ class AdminBookingPaymentViewModel extends GetxController {
       ownerId: ownerId,
       checkIn: _tsToDate(data['check_in']),
       checkOut: _tsToDate(data['check_out']),
-      createdAt: _tsToDate(data['created_at']),
+      createdAt: _tsToDate(data['created_at']), // ✅ tanggal pesan
       paymentMethod: paymentMethod,
       bank: bank,
       totalPrice: totalPrice,
@@ -181,46 +213,33 @@ class AdminBookingPaymentViewModel extends GetxController {
       paymentStatus: paymentStatus,
       status: status,
       hasPaymentProof: hasPaymentProof,
-      paymentProofUrl: proofUrl ?? '',
-      paymentProofFileName: proofFileName ?? '',
+      paymentProofUrl: proofUrl,
+      paymentProofFileName: proofFileName,
     );
   }
 
-  /// Method untuk menghitung total pendapatan admin, owner, dan omset
-  /// ✅ SEKARANG: hanya hitung booking yang status-nya CONFIRMED
-  Future<void> calculateIncome() async {
-    try {
-      final snap = await _db.collection('bookings').get();
-      int adminIncome = 0;
-      int ownerIncome = 0;
-      int revenue = 0;
+  // ✅ hitung dari list yang sudah difilter bulan + hanya confirmed
+  void calculateIncomeFromLoadedList() {
+    int adminIncome = 0;
+    int ownerIncome = 0;
+    int revenue = 0;
 
-      for (final doc in snap.docs) {
-        final data = doc.data();
-
-        // ✅ FILTER: hanya confirmed yang dihitung
-        final status = (data['status'] ?? '').toString();
-        if (status != 'confirmed') continue;
-
-        adminIncome += _numToInt(data['admin_fee']);
-        ownerIncome += _numToInt(data['owner_income']);
-        revenue += _numToInt(data['total_price']);
-      }
-
-      totalAdminIncome.value = adminIncome;
-      totalOwnerIncome.value = ownerIncome;
-      totalRevenue.value = revenue;
-    } catch (e) {
-      print('ERROR calculateIncome: $e');
+    for (final b in bookings) {
+      if (b.status != 'confirmed') continue;
+      adminIncome += b.adminFee;
+      ownerIncome += b.ownerIncome;
+      revenue += b.totalPrice;
     }
+
+    totalAdminIncome.value = adminIncome;
+    totalOwnerIncome.value = ownerIncome;
+    totalRevenue.value = revenue;
   }
 
-  /// dipanggil dari tombol REFRESH di halaman
   Future<void> refresh() async {
     await loadBookings();
   }
 
-  /// 🔥 KONFIRMASI BOOKING
   Future<void> confirmBooking(AdminBookingItem booking) async {
     try {
       isLoading.value = true;
@@ -239,6 +258,7 @@ class AdminBookingPaymentViewModel extends GetxController {
 
       await loadBookings();
     } catch (e, st) {
+      // ignore: avoid_print
       print('ERROR confirmBooking: $e\n$st');
       Get.snackbar(
         'Gagal',
@@ -250,7 +270,6 @@ class AdminBookingPaymentViewModel extends GetxController {
     }
   }
 
-  /// ✅ Batalkan konfirmasi: status jadi pending lagi + reset uang
   Future<void> setPending(AdminBookingItem booking) async {
     try {
       isLoading.value = true;
@@ -265,6 +284,7 @@ class AdminBookingPaymentViewModel extends GetxController {
 
       await loadBookings();
     } catch (e, st) {
+      // ignore: avoid_print
       print('ERROR setPending: $e\n$st');
       Get.snackbar(
         'Gagal',

@@ -30,7 +30,8 @@ class AdminBookingPaymentView extends GetView<AdminBookingPaymentViewModel> {
             ),
           ),
           const SizedBox(height: 16),
-          const Expanded(
+
+          Expanded(
             child: BookingTable(),
           ),
         ],
