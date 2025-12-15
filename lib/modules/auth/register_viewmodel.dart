@@ -1,21 +1,31 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:utp_flutter/app_session.dart';
-import 'package:utp_flutter/main.dart'; // untuk MainPage
+import 'package:utp_flutter/main.dart';
 
 class RegisterViewModel extends GetxController {
-  // Text controller
+  // =====================
+  // TEXT CONTROLLERS
+  // =====================
   final nameC = TextEditingController();
   final phoneC = TextEditingController();
   final emailC = TextEditingController();
   final passwordC = TextEditingController();
 
-  // State
+  // =====================
+  // STATE
+  // =====================
   final isLoading = false.obs;
   final errorMessage = RxnString();
 
-  final _usersRef = FirebaseFirestore.instance.collection('users');
+  // =====================
+  // SERVICES
+  // =====================
+  final FirebaseAuth _auth = FirebaseAuth.instance;
+  final CollectionReference _usersRef =
+      FirebaseFirestore.instance.collection('users');
 
   @override
   void onClose() {
@@ -26,18 +36,29 @@ class RegisterViewModel extends GetxController {
     super.onClose();
   }
 
+  // =====================
+  // REGISTER USER
+  // =====================
   Future<void> register() async {
-    var name = nameC.text.trim();
-    var phone = phoneC.text.trim();
-    final email = emailC.text.trim();
-    final password = passwordC.text.trim();
+    String name = nameC.text.trim();
+    String phone = phoneC.text.trim();
+    final String email = emailC.text.trim();
+    final String password = passwordC.text.trim();
 
+    // =====================
+    // VALIDASI FORM
+    // =====================
     if (name.isEmpty || phone.isEmpty || email.isEmpty || password.isEmpty) {
       errorMessage.value = 'Semua field wajib diisi.';
       return;
     }
 
-    // normalisasi nomor: hapus 0 depan
+    if (password.length < 6) {
+      errorMessage.value = 'Password minimal 6 karakter.';
+      return;
+    }
+
+    // Normalisasi phone → 812xxx
     if (phone.startsWith('0')) {
       phone = phone.substring(1);
     }
@@ -46,50 +67,58 @@ class RegisterViewModel extends GetxController {
     errorMessage.value = null;
 
     try {
-      // cek email
-      final emailSnap = await _usersRef
-          .where('email', isEqualTo: email)
-          .limit(1)
-          .get();
+      // =====================
+      // 1️⃣ CREATE FIREBASE AUTH
+      // =====================
+      final UserCredential credential =
+          await _auth.createUserWithEmailAndPassword(
+        email: email,
+        password: password,
+      );
 
-      if (emailSnap.docs.isNotEmpty) {
-        errorMessage.value = 'Email sudah terdaftar.';
-        isLoading.value = false;
-        return;
-      }
+      final User user = credential.user!;
+      final String uid = user.uid;
 
-      // cek phone
-      final phoneSnap = await _usersRef
-          .where('phone', isEqualTo: phone)
-          .limit(1)
-          .get();
-
-      if (phoneSnap.docs.isNotEmpty) {
-        errorMessage.value = 'Nomor telepon sudah terdaftar.';
-        isLoading.value = false;
-        return;
-      }
-
-      // simpan user baru
-      await _usersRef.add({
+      // =====================
+      // 2️⃣ SIMPAN KE FIRESTORE
+      // ROLE FIXED = user
+      // =====================
+      await _usersRef.doc(uid).set({
         'name': name,
         'phone': phone,
         'email': email,
-        'password': password, // catatan: nanti sebaiknya di-hash
-        'role': 'user',
+        'role': 'user', // 🔥 FIXED
         'profile_img': '',
         'created_at': FieldValue.serverTimestamp(),
+        'updated_at': FieldValue.serverTimestamp(),
+        'is_active': true,
       });
 
-      // auto login berdasarkan phone (sama seperti kode lama)
-      await AppSession.saveUser(phone);
+      // =====================
+      // 3️⃣ SIMPAN SESSION (🔥 FIX UTAMA)
+      // =====================
+      final bool ok = await AppSession.saveUserFromUid(uid);
+      if (!ok) {
+        throw Exception('Gagal menyimpan sesi pengguna');
+      }
 
-      isLoading.value = false;
-
-      // masuk ke MainPage (bottom nav)
+      // =====================
+      // 4️⃣ MASUK KE MAIN PAGE
+      // =====================
       Get.offAll(() => const MainPage());
+    } on FirebaseAuthException catch (e) {
+      if (e.code == 'email-already-in-use') {
+        errorMessage.value = 'Email sudah terdaftar.';
+      } else if (e.code == 'weak-password') {
+        errorMessage.value = 'Password terlalu lemah.';
+      } else if (e.code == 'invalid-email') {
+        errorMessage.value = 'Format email tidak valid.';
+      } else {
+        errorMessage.value = e.message;
+      }
     } catch (e) {
       errorMessage.value = 'Terjadi kesalahan: $e';
+    } finally {
       isLoading.value = false;
     }
   }

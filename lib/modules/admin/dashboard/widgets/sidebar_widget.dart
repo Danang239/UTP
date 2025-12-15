@@ -21,6 +21,9 @@ class SidebarWidget extends GetView<AdminDashboardViewModel> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // =====================
+          // HEADER
+          // =====================
           Row(
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
@@ -52,7 +55,12 @@ class SidebarWidget extends GetView<AdminDashboardViewModel> {
               ),
             ],
           ),
+
           const SizedBox(height: 32),
+
+          // =====================
+          // MENU
+          // =====================
           Expanded(
             child: Obx(() {
               return ListView.separated(
@@ -63,7 +71,7 @@ class SidebarWidget extends GetView<AdminDashboardViewModel> {
                   final isSelected =
                       controller.selectedMenuIndex.value == index;
 
-                  return _SidebarItem(
+                  return SidebarItem(
                     title: title,
                     isSelected: isSelected,
                     onTap: () {
@@ -78,18 +86,71 @@ class SidebarWidget extends GetView<AdminDashboardViewModel> {
               );
             }),
           ),
+
+          const Divider(height: 24),
+
+          // =====================
+          // 🔥 LOGOUT BUTTON (BARU)
+          // =====================
+          InkWell(
+            onTap: () async {
+              final confirm = await Get.dialog<bool>(
+                AlertDialog(
+                  title: const Text('Logout'),
+                  content: const Text(
+                    'Yakin ingin keluar dari akun admin?',
+                  ),
+                  actions: [
+                    TextButton(
+                      onPressed: () => Get.back(result: false),
+                      child: const Text('Batal'),
+                    ),
+                    ElevatedButton(
+                      onPressed: () => Get.back(result: true),
+                      child: const Text('Logout'),
+                    ),
+                  ],
+                ),
+              );
+
+              if (confirm == true) {
+                await controller.logout();
+              }
+            },
+            child: Row(
+              children: [
+                const Icon(
+                  Icons.logout,
+                  size: 18,
+                  color: Colors.red,
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  'Logout',
+                  style: TextStyle(
+                    color: Colors.red[700],
+                    fontWeight: FontWeight.w500,
+                    fontSize: 13,
+                  ),
+                ),
+              ],
+            ),
+          ),
         ],
       ),
     );
   }
 }
 
-class _SidebarItem extends StatelessWidget {
+// =====================================================
+// SIDEBAR ITEM (TIDAK DIUBAH)
+// =====================================================
+class SidebarItem extends StatelessWidget {
   final String title;
   final bool isSelected;
   final VoidCallback onTap;
 
-  const _SidebarItem({
+  const SidebarItem({
     super.key,
     required this.title,
     required this.isSelected,
@@ -98,12 +159,6 @@ class _SidebarItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final textStyle = TextStyle(
-      fontSize: 13,
-      fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
-      color: isSelected ? Colors.black : Colors.grey[700],
-    );
-
     return InkWell(
       onTap: onTap,
       child: Container(
@@ -116,7 +171,15 @@ class _SidebarItem extends StatelessWidget {
             ),
           ),
         ),
-        child: Text(title, style: textStyle),
+        child: Text(
+          title,
+          style: TextStyle(
+            fontSize: 13,
+            fontWeight:
+                isSelected ? FontWeight.w600 : FontWeight.w400,
+            color: isSelected ? Colors.black : Colors.grey[700],
+          ),
+        ),
       ),
     );
   }

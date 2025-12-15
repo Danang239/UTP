@@ -1,44 +1,78 @@
-import 'package:cloud_firestore/cloud_firestore.dart';          // ⬅️ TAMBAHAN
 import 'package:get/get.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+
 import 'package:utp_flutter/app_session.dart';
-import 'package:utp_flutter/data/repositories/auth_repository.dart';
-import 'package:utp_flutter/main.dart'; // untuk MainPage
 import 'package:utp_flutter/app/routes/app_routes.dart';
+import 'package:utp_flutter/main.dart';
 
 class LoginViewModel extends GetxController {
-  final AuthRepository _authRepository;
-
-  LoginViewModel(this._authRepository);
+  final FirebaseAuth _auth = FirebaseAuth.instance;
 
   final isLoading = false.obs;
   final errorMessage = RxnString();
 
+  // =====================================================
+  // LOGIN (EMAIL / PHONE + PASSWORD)
+  // =====================================================
   Future<void> login(String identifier, String password) async {
     try {
       isLoading.value = true;
       errorMessage.value = null;
 
-      // 🔐 login ke backend (Supabase / dsb.)
-      final phoneFromDb = await _authRepository.login(
-        identifier.trim(),
-        password.trim(),
+      if (identifier.isEmpty || password.isEmpty) {
+        errorMessage.value = 'Email / Nomor HP dan password wajib diisi';
+        return;
+      }
+
+      // =====================================================
+      // 1️⃣ JIKA LOGIN VIA PHONE → AMBIL EMAIL DARI FIRESTORE
+      // =====================================================
+      String emailToLogin = identifier.trim();
+
+      if (!identifier.contains('@')) {
+        String phone = identifier.trim();
+        if (phone.startsWith('0')) {
+          phone = phone.substring(1);
+        }
+
+        final snap = await FirebaseFirestore.instance
+            .collection('users')
+            .where('phone', isEqualTo: phone)
+            .limit(1)
+            .get();
+
+        if (snap.docs.isEmpty) {
+          errorMessage.value = 'Akun tidak ditemukan';
+          return;
+        }
+
+        emailToLogin = snap.docs.first['email'];
+      }
+
+      // =====================================================
+      // 2️⃣ LOGIN KE FIREBASE AUTH
+      // =====================================================
+      final credential = await _auth.signInWithEmailAndPassword(
+        email: emailToLogin,
+        password: password,
       );
 
-      // simpan sesi dari Firestore (userDocId, phone, name, role, dll.)
-      final ok = await AppSession.saveUser(phoneFromDb);
+      final uid = credential.user!.uid;
+
+      // =====================================================
+      // 3️⃣ AMBIL DATA USER DARI FIRESTORE (BERDASARKAN UID)
+      // =====================================================
+      final ok = await AppSession.saveUserFromUid(uid);
       if (!ok) {
-        errorMessage.value = 'Gagal menyimpan sesi pengguna';
+        errorMessage.value = 'Gagal memuat data akun';
+        await _auth.signOut();
         return;
       }
 
-      // ✅ CEK STATUS BAN/BLOKIR DI FIRESTORE
-      final blockedOrBanned = await _checkBanStatus();
-      if (blockedOrBanned) {
-        // kalau diblokir/dibanned, jangan lanjut ke dashboard
-        return;
-      }
-
-      // CEK ROLE DARI SESSION (LOGIC LAMA – TIDAK DIUBAH)
+      // =====================================================
+      // 4️⃣ REDIRECT SESUAI ROLE
+      // =====================================================
       final role = AppSession.role ?? 'user';
 
       if (role == 'admin') {
@@ -48,69 +82,18 @@ class LoginViewModel extends GetxController {
       } else {
         Get.offAll(() => const MainPage());
       }
+    } on FirebaseAuthException catch (e) {
+      if (e.code == 'user-not-found') {
+        errorMessage.value = 'Akun tidak ditemukan';
+      } else if (e.code == 'wrong-password') {
+        errorMessage.value = 'Password salah';
+      } else {
+        errorMessage.value = e.message;
+      }
     } catch (e) {
-      errorMessage.value = e.toString();
+      errorMessage.value = 'Terjadi kesalahan: $e';
     } finally {
       isLoading.value = false;
-    }
-  }
-
-  // ======================================================
-  // CEK apakah user diblokir / dibanned setelah login
-  // ======================================================
-  Future<bool> _checkBanStatus() async {
-    try {
-      final userDocId = AppSession.userDocId;
-      if (userDocId == null) {
-        // kalau entah kenapa belum ada id dokumen, anggap aman
-        return false;
-      }
-
-      final doc = await FirebaseFirestore.instance
-          .collection('users')
-          .doc(userDocId)
-          .get();
-
-      if (!doc.exists) return false;
-
-      final data = doc.data() as Map<String, dynamic>;
-
-      // default: aktif
-      final bool isActive = (data['is_active'] ?? true) as bool;
-
-      DateTime? bannedUntil;
-      if (data['banned_until'] is Timestamp) {
-        bannedUntil = (data['banned_until'] as Timestamp).toDate();
-      }
-
-      final bool isCurrentlyBanned =
-          bannedUntil != null && bannedUntil.isAfter(DateTime.now());
-
-      // ❌ BLOKIR PERMANEN
-      if (!isActive) {
-        errorMessage.value = 'Akun Anda telah diblokir oleh admin.';
-        await AppSession.clear();
-        return true;
-      }
-
-      // ❌ BAN SEMENTARA
-      if (isCurrentlyBanned) {
-        final until = bannedUntil!;
-        final untilText =
-            '${until.day.toString().padLeft(2, '0')}/${until.month.toString().padLeft(2, '0')}/${until.year}';
-
-        errorMessage.value =
-            'Akun Anda dibanned sampai $untilText. Silakan coba lagi nanti.';
-        await AppSession.clear();
-        return true;
-      }
-
-      // ✅ aman
-      return false;
-    } catch (e) {
-      // kalau gagal cek ban (misal jaringan error), jangan blok user
-      print('ERROR _checkBanStatus: $e');
-      return false;
     }
   }
 }

@@ -2,13 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:utp_flutter/modules/admin/dashboard/bikin_owner/admin_data_owner_viewmodel.dart';
 
-class AdminDataOwnerView extends StatelessWidget {
+class AdminDataOwnerView extends GetView<AdminDataOwnerViewModel> {
   const AdminDataOwnerView({super.key});
 
   @override
   Widget build(BuildContext context) {
-    final controller = Get.find<AdminDataOwnerViewModel>();
-
     return Scaffold(
       appBar: AppBar(
         title: const Text('Data Owner'),
@@ -16,17 +14,23 @@ class AdminDataOwnerView extends StatelessWidget {
           IconButton(
             icon: const Icon(Icons.add),
             tooltip: 'Tambah Owner',
-            onPressed: () => _showCreateOwnerDialog(controller),
+            onPressed: () => _showCreateOwnerDialog(),
           ),
         ],
       ),
       body: Padding(
         padding: const EdgeInsets.all(16),
         child: Obx(() {
+          // =============================
+          // LOADING
+          // =============================
           if (controller.isLoading.value) {
             return const Center(child: CircularProgressIndicator());
           }
 
+          // =============================
+          // ERROR
+          // =============================
           if (controller.errorMessage.value.isNotEmpty) {
             return Center(
               child: Text(
@@ -37,10 +41,16 @@ class AdminDataOwnerView extends StatelessWidget {
             );
           }
 
+          // =============================
+          // EMPTY STATE
+          // =============================
           if (controller.owners.isEmpty) {
             return const Center(child: Text('Belum ada data owner'));
           }
 
+          // =============================
+          // DATA TABLE
+          // =============================
           return Container(
             decoration: BoxDecoration(
               color: Colors.white,
@@ -57,8 +67,9 @@ class AdminDataOwnerView extends StatelessWidget {
               scrollDirection: Axis.horizontal,
               child: DataTable(
                 columnSpacing: 24,
-                headingRowColor:
-                    MaterialStateProperty.all(const Color(0xFFF4F0FF)),
+                headingRowColor: MaterialStateProperty.all(
+                  const Color(0xFFF4F0FF),
+                ),
                 columns: const [
                   DataColumn(label: Text('No')),
                   DataColumn(label: Text('Nama Owner')),
@@ -70,71 +81,96 @@ class AdminDataOwnerView extends StatelessWidget {
                 rows: List.generate(controller.owners.length, (index) {
                   final owner = controller.owners[index];
 
-                  return DataRow(cells: [
-                    DataCell(Text('${index + 1}')),
-                    DataCell(Text(owner.name)),
-                    DataCell(Text(owner.email)),
-                    DataCell(Text(owner.phone)),
-                    DataCell(Text(owner.role)),
-                    DataCell(Row(children: [
-                      TextButton(
-                        style: TextButton.styleFrom(
-                          backgroundColor: const Color(0xFF673AB7),
-                          foregroundColor: Colors.white,
-                        ),
-                        onPressed: () {
-                          Get.toNamed('/ownerDetail', arguments: owner.id);
-                        },
-                        child: const Text('Detail'),
-                      ),
-                      const SizedBox(width: 8),
-                      TextButton(
-                        style: TextButton.styleFrom(
-                          backgroundColor: const Color(0xFFFFC83A),
-                          foregroundColor: Colors.white,
-                        ),
-                        onPressed: () {
-                          Get.toNamed('/editOwner', arguments: owner.id);
-                        },
-                        child: const Text('Edit'),
-                      ),
-                      const SizedBox(width: 8),
-                      TextButton(
-                        style: TextButton.styleFrom(
-                          backgroundColor: const Color(0xFFFF4D4D),
-                          foregroundColor: Colors.white,
-                        ),
-                        onPressed: () async {
-                          final confirm = await showDialog<bool>(
-                                context: context,
-                                builder: (ctx) => AlertDialog(
-                                  title: const Text('Hapus Owner'),
-                                  content: Text(
-                                      'Yakin ingin menghapus "${owner.name}"?'),
-                                  actions: [
-                                    TextButton(
-                                      onPressed: () =>
-                                          Navigator.pop(ctx, false),
-                                      child: const Text('Batal'),
-                                    ),
-                                    TextButton(
-                                      onPressed: () =>
-                                          Navigator.pop(ctx, true),
-                                      child: const Text('Hapus'),
-                                    ),
-                                  ],
-                                ),
-                              ) ??
-                              false;
+                  return DataRow(
+                    cells: [
+                      DataCell(Text('${index + 1}')),
+                      DataCell(Text(owner.name)),
+                      DataCell(Text(owner.email)),
+                      DataCell(Text(owner.phone)),
+                      DataCell(Text(owner.role)),
+                      DataCell(
+                        Row(
+                          children: [
+                            // =============================
+                            // DETAIL
+                            // =============================
+                            TextButton(
+                              style: TextButton.styleFrom(
+                                backgroundColor: const Color(0xFF673AB7),
+                                foregroundColor: Colors.white,
+                              ),
+                              onPressed: () {
+                                Get.toNamed(
+                                  '/ownerDetail',
+                                  arguments: owner.id,
+                                );
+                              },
+                              child: const Text('Detail'),
+                            ),
+                            const SizedBox(width: 8),
 
-                          if (confirm) {
-                            await controller.deleteOwner(owner.id);
-                          }
-                        },
-                        child: const Text('Hapus'),
+                            // =============================
+                            // EDIT
+                            // =============================
+                            TextButton(
+                              style: TextButton.styleFrom(
+                                backgroundColor: const Color(0xFFFFC83A),
+                                foregroundColor: Colors.white,
+                              ),
+                              onPressed: () {
+                                Get.toNamed(
+                                  '/editOwner',
+                                  arguments: owner.id,
+                                );
+                              },
+                              child: const Text('Edit'),
+                            ),
+                            const SizedBox(width: 8),
+
+                            // =============================
+                            // NONAKTIFKAN (SOFT DELETE)
+                            // =============================
+                            TextButton(
+                              style: TextButton.styleFrom(
+                                backgroundColor: const Color(0xFFFF4D4D),
+                                foregroundColor: Colors.white,
+                              ),
+                              onPressed: () async {
+                                final confirm = await showDialog<bool>(
+                                      context: context,
+                                      builder: (ctx) => AlertDialog(
+                                        title: const Text(
+                                            'Nonaktifkan Owner'),
+                                        content: Text(
+                                          'Yakin ingin menonaktifkan "${owner.name}"?',
+                                        ),
+                                        actions: [
+                                          TextButton(
+                                            onPressed: () =>
+                                                Navigator.pop(ctx, false),
+                                            child: const Text('Batal'),
+                                          ),
+                                          TextButton(
+                                            onPressed: () =>
+                                                Navigator.pop(ctx, true),
+                                            child: const Text('Nonaktifkan'),
+                                          ),
+                                        ],
+                                      ),
+                                    ) ??
+                                    false;
+
+                                if (confirm) {
+                                  await controller.deleteOwner(owner.id);
+                                }
+                              },
+                              child: const Text('Nonaktifkan'),
+                            ),
+                          ],
+                        ),
                       ),
-                    ])),
-                  ]);
+                    ],
+                  );
                 }),
               ),
             ),
@@ -145,9 +181,9 @@ class AdminDataOwnerView extends StatelessWidget {
   }
 
   // =====================================================
-  // DIALOG CREATE OWNER (🔥 FIXED & STABLE)
+  // DIALOG CREATE OWNER
   // =====================================================
-  void _showCreateOwnerDialog(AdminDataOwnerViewModel controller) {
+  void _showCreateOwnerDialog() {
     final nameC = TextEditingController();
     final emailC = TextEditingController();
     final phoneC = TextEditingController();
@@ -159,9 +195,20 @@ class AdminDataOwnerView extends StatelessWidget {
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            TextField(controller: nameC, decoration: const InputDecoration(labelText: 'Nama')),
-            TextField(controller: emailC, decoration: const InputDecoration(labelText: 'Email')),
-            TextField(controller: phoneC, decoration: const InputDecoration(labelText: 'No. Telepon')),
+            TextField(
+              controller: nameC,
+              decoration: const InputDecoration(labelText: 'Nama'),
+            ),
+            TextField(
+              controller: emailC,
+              decoration: const InputDecoration(labelText: 'Email'),
+              keyboardType: TextInputType.emailAddress,
+            ),
+            TextField(
+              controller: phoneC,
+              decoration: const InputDecoration(labelText: 'No. Telepon'),
+              keyboardType: TextInputType.phone,
+            ),
             TextField(
               controller: passwordC,
               decoration: const InputDecoration(labelText: 'Password'),
@@ -194,7 +241,7 @@ class AdminDataOwnerView extends StatelessWidget {
                 return;
               }
 
-              // 🔥 TUTUP DIALOG DULU → controller aman
+              // 🔥 TUTUP DIALOG DULU (AMAN)
               Get.back();
 
               await controller.createOwner(

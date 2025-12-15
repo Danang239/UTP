@@ -3,46 +3,45 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:utp_flutter/app/routes/app_pages.dart';
 
 import 'firebase_options.dart';
+import 'app/routes/app_pages.dart';
+import 'app/routes/app_routes.dart';
+import 'app_session.dart';
 
 // AUTH
 import 'modules/auth/login_binding.dart';
-import 'modules/auth/login_view.dart';
 import 'modules/auth/register_binding.dart';
-import 'modules/auth/register_view.dart';
 
-// HOME
-import 'modules/user/home/home_binding.dart';
-import 'modules/user/home/home_view.dart';
-
-// FAVORITE
-import 'modules/user/favorite/favorite_binding.dart';
+// USER
 import 'modules/user/favorite/favorite_view.dart';
-
-// PESAN
+import 'modules/user/home/home_binding.dart';
+import 'modules/user/favorite/favorite_binding.dart';
+import 'modules/user/home/home_view.dart';
 import 'modules/user/pesan/pesan_binding.dart';
 import 'modules/user/pesan/pesan_view.dart';
-
-// PROFILE
 import 'modules/user/profile/profile_binding.dart';
 import 'modules/user/profile/profile_view.dart';
 
+// ============================================================
+// ========================== MAIN =============================
+// ============================================================
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-await Supabase.initialize(
-  url: 'https://avztxkkbefvxfftvodui.supabase.co',
-  anonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF2enR4a2tiZWZ2eGZmdHZvZHVpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQzOTMzMjUsImV4cCI6MjA3OTk2OTMyNX0.liN7spnWnbKUXsKPS6IgbN5z09AR0gD61bwpLoi5aTE',
-);
+  // Supabase (tidak dihapus)
+  await Supabase.initialize(
+    url: 'https://avztxkkbefvxfftvodui.supabase.co',
+    anonKey:
+        'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF2enR4a2tiZWZ2eGZmdHZvZHVpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQzOTMzMjUsImV4cCI6MjA3OTk2OTMyNX0.liN7spnWnbKUXsKPS6IgbN5z09AR0gD61bwpLoi5aTE',
+  );
 
-
+  // Firebase
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
 
-  // GLOBAL BINDINGS
+  // GLOBAL BINDINGS (aman)
   LoginBinding().dependencies();
   RegisterBinding().dependencies();
   HomeBinding().dependencies();
@@ -53,6 +52,9 @@ await Supabase.initialize(
   runApp(const MyApp());
 }
 
+// ============================================================
+// ========================== APP ==============================
+// ============================================================
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
@@ -61,9 +63,56 @@ class MyApp extends StatelessWidget {
     return GetMaterialApp(
       title: 'Stay&Co',
       debugShowCheckedModeBanner: false,
-      initialRoute: AppPages.initial,
+      initialRoute: Routes.splash, // 🔥 PENTING
       getPages: AppPages.routes,
-      home: const LoginView(),
+    );
+  }
+}
+
+// ============================================================
+// ======================= SPLASH ==============================
+// ============================================================
+class SplashView extends StatefulWidget {
+  const SplashView({super.key});
+
+  @override
+  State<SplashView> createState() => _SplashViewState();
+}
+
+class _SplashViewState extends State<SplashView> {
+  @override
+  void initState() {
+    super.initState();
+    _bootstrap();
+  }
+
+  Future<void> _bootstrap() async {
+    // load session dari SharedPreferences
+    final loggedIn = await AppSession.loadSession();
+
+    if (!loggedIn) {
+      Get.offAllNamed(Routes.login);
+      return;
+    }
+
+    switch (AppSession.role) {
+      case 'admin':
+        Get.offAllNamed(Routes.adminDashboard);
+        break;
+      case 'owner':
+        Get.offAllNamed(Routes.ownerDashboard);
+        break;
+      default:
+        Get.offAllNamed(Routes.home);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return const Scaffold(
+      body: Center(
+        child: CircularProgressIndicator(),
+      ),
     );
   }
 }
@@ -94,7 +143,7 @@ class _MainPageState extends State<MainPage> {
       ProfileView(
         onTapFavorite: () {
           setState(() {
-            _selectedIndex = 1; // 🔥 PINDAH KE TAB FAVORITE
+            _selectedIndex = 1;
           });
         },
       ),

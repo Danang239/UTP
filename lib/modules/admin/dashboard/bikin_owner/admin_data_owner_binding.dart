@@ -4,7 +4,9 @@ import 'package:utp_flutter/modules/admin/dashboard/bikin_owner/admin_data_owner
 class AdminDataOwnerBinding extends Bindings {
   @override
   void dependencies() {
-    // Mendaftarkan ViewModel AdminDataOwnerViewModel
-    Get.put(AdminDataOwnerViewModel());
+    Get.lazyPut<AdminDataOwnerViewModel>(
+      () => AdminDataOwnerViewModel(),
+      fenix: false,
+    );
   }
 }

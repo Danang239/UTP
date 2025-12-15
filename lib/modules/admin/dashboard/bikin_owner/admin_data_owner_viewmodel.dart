@@ -1,4 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:get/get.dart';
 import 'package:utp_flutter/modules/admin/dashboard/bikin_owner/admin_owner_item.dart';
 
@@ -16,23 +18,22 @@ class AdminDataOwnerViewModel extends GetxController {
   }
 
   // =====================================================
-  // LOAD OWNER (role = owner)
+  // LOAD OWNER
   // =====================================================
   Future<void> loadOwners() async {
     try {
       isLoading.value = true;
-      errorMessage.value = '';
 
       final snapshot = await _db
           .collection('users')
           .where('role', isEqualTo: 'owner')
           .get();
 
-      final items = snapshot.docs
-          .map((doc) => AdminOwnerItem.fromFirestore(doc.data(), doc.id))
-          .toList();
-
-      owners.assignAll(items);
+      owners.assignAll(
+        snapshot.docs
+            .map((d) => AdminOwnerItem.fromFirestore(d.data(), d.id))
+            .toList(),
+      );
     } catch (e) {
       errorMessage.value = e.toString();
     } finally {
@@ -41,7 +42,7 @@ class AdminDataOwnerViewModel extends GetxController {
   }
 
   // =====================================================
-  // CREATE OWNER (FINAL & AMAN)
+  // CREATE OWNER (AUTH + FIRESTORE | ADMIN SAFE)
   // =====================================================
   Future<void> createOwner({
     required String name,
@@ -49,54 +50,84 @@ class AdminDataOwnerViewModel extends GetxController {
     required String phone,
     required String password,
   }) async {
-    if (isLoading.value) return; // 🔥 cegah double submit
+    if (isLoading.value) return;
+
+    FirebaseApp? secondaryApp;
 
     try {
       isLoading.value = true;
       errorMessage.value = '';
 
-      // 🔎 optional: cek email duplikat
-      final existing = await _db
+      final emailTrim = email.trim();
+
+      // 🔎 Cek email di Firestore
+      final exist = await _db
           .collection('users')
-          .where('email', isEqualTo: email.trim())
+          .where('email', isEqualTo: emailTrim)
           .limit(1)
           .get();
 
-      if (existing.docs.isNotEmpty) {
+      if (exist.docs.isNotEmpty) {
         throw 'Email sudah terdaftar';
       }
 
-      // 🔥 BUAT doc ID SENDIRI
-      final ownerRef = _db.collection('users').doc();
-      final ownerId = ownerRef.id;
+      // =====================================================
+      // 🔐 INIT SECONDARY FIREBASE APP
+      // =====================================================
+      secondaryApp = await Firebase.initializeApp(
+        name: 'Secondary',
+        options: Firebase.app().options,
+      );
 
-      await ownerRef.set({
+      final secondaryAuth = FirebaseAuth.instanceFor(app: secondaryApp);
+
+      // =====================================================
+      // 🔐 CREATE OWNER IN AUTH
+      // =====================================================
+      final credential =
+          await secondaryAuth.createUserWithEmailAndPassword(
+        email: emailTrim,
+        password: password,
+      );
+
+      final uid = credential.user!.uid;
+
+      // =====================================================
+      // 💾 SAVE TO FIRESTORE
+      // =====================================================
+      await _db.collection('users').doc(uid).set({
+        'uid': uid,
         'name': name.trim(),
-        'email': email.trim(),
+        'email': emailTrim,
         'phone': phone.trim(),
-        'password': password, // sesuai sistem kamu
-        'role': 'owner',      // 🔥 FIX
-        'owner_id': ownerId,  // 🔥 KUNCI RELASI
+        'role': 'owner',
         'profile_img': '',
-        'created_at': FieldValue.serverTimestamp(), // ✅ FIX
+        'is_active': true,
+        'created_by': 'admin',
+        'created_at': FieldValue.serverTimestamp(),
         'updated_at': FieldValue.serverTimestamp(),
       });
 
+      await secondaryAuth.signOut();
+      await secondaryApp.delete();
+
       await loadOwners();
-    } catch (e) {
-      errorMessage.value = e.toString();
+
       Get.snackbar(
-        'Gagal',
-        errorMessage.value,
+        'Berhasil',
+        'Akun owner berhasil dibuat',
         snackPosition: SnackPosition.BOTTOM,
       );
+    } catch (e) {
+      errorMessage.value = e.toString();
+      Get.snackbar('Error', errorMessage.value);
     } finally {
       isLoading.value = false;
     }
   }
 
   // =====================================================
-  // UPDATE OWNER
+  // UPDATE OWNER (Firestore only)
   // =====================================================
   Future<void> updateOwner({
     required String ownerId,
@@ -106,37 +137,32 @@ class AdminDataOwnerViewModel extends GetxController {
   }) async {
     try {
       isLoading.value = true;
-      errorMessage.value = '';
 
       await _db.collection('users').doc(ownerId).update({
         'name': name.trim(),
-        'email': email.trim(),
         'phone': phone.trim(),
-        'updated_at': Timestamp.now(),
+        'updated_at': FieldValue.serverTimestamp(),
       });
 
       await loadOwners();
-    } catch (e) {
-      errorMessage.value = e.toString();
-      Get.snackbar('Error', errorMessage.value);
     } finally {
       isLoading.value = false;
     }
   }
 
   // =====================================================
-  // DELETE OWNER
+  // DELETE OWNER (SOFT DELETE)
   // =====================================================
   Future<void> deleteOwner(String ownerId) async {
     try {
       isLoading.value = true;
-      errorMessage.value = '';
 
-      await _db.collection('users').doc(ownerId).delete();
+      await _db.collection('users').doc(ownerId).update({
+        'is_active': false,
+        'updated_at': FieldValue.serverTimestamp(),
+      });
+
       await loadOwners();
-    } catch (e) {
-      errorMessage.value = e.toString();
-      Get.snackbar('Error', errorMessage.value);
     } finally {
       isLoading.value = false;
     }

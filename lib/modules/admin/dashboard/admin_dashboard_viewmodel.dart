@@ -1,23 +1,29 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart'; // 🔥 TAMBAHAN (AMAN)
 import 'package:utp_flutter/app_session.dart';
+import 'package:utp_flutter/app/routes/app_routes.dart';
 
-// ✅ TAMBAHAN: import Booking VM supaya bisa ikut diset periodenya
-// GANTI PATH ini kalau lokasi file kamu beda:
+// ✅ Booking & Payment VM (TIDAK DIUBAH)
 import '../booking_payment/admin_booking_payment_viewmodel.dart';
 
-
 class AdminDashboardViewModel extends GetxController {
-  // Profil admin
+  // =========================
+  // PROFIL ADMIN
+  // =========================
   final name = ''.obs;
   final email = ''.obs;
 
-  // Search bar
+  // =========================
+  // SEARCH
+  // =========================
   final searchController = TextEditingController();
   final searchText = ''.obs;
 
-  // Sidebar menu (Booking & Pembayaran digabung)
+  // =========================
+  // SIDEBAR MENU
+  // =========================
   final menuItems = <String>[
     'Dashboard',
     'Data Villa',
@@ -30,45 +36,63 @@ class AdminDashboardViewModel extends GetxController {
 
   final selectedMenuIndex = 0.obs;
 
-  // Statistik utama
+  // =========================
+  // STATISTIK
+  // =========================
   final totalVilla = 0.obs;
   final totalPesanan = 0.obs;
   final totalReschedule = 0.obs;
 
-  // LIST DATA VILLA UNTUK HALAMAN "DATA VILLA"
+  // =========================
+  // DATA VILLA
+  // =========================
   final villas = <Map<String, dynamic>>[].obs;
 
-  // Pendapatan
-  final totalPendapatan = 0.0.obs; // total semua (100%) => total_price
-  final pendapatanAdmin = 0.0.obs; // total admin_fee
-  final pendapatanOwner = 0.0.obs; // total owner (90%)
-  final ownerPendapatanMap = <String, double>{}.obs; // per owner_id
+  // =========================
+  // PENDAPATAN
+  // =========================
+  final totalPendapatan = 0.0.obs;
+  final pendapatanAdmin = 0.0.obs;
+  final pendapatanOwner = 0.0.obs;
+  final ownerPendapatanMap = <String, double>{}.obs;
 
-  // FILTER BULAN & TAHUN (DINAMIS)
-  final selectedMonth = DateTime.now().month.obs; // 1-12
+  // =========================
+  // FILTER BULAN & TAHUN
+  // =========================
+  final selectedMonth = DateTime.now().month.obs;
   final selectedYear = DateTime.now().year.obs;
 
+  // =========================
+  // INIT
+  // =========================
   @override
   void onInit() {
     super.onInit();
     _loadProfile();
-    loadDashboardStats(); // default: bulan & tahun saat ini
-
-    // ✅ TAMBAHAN: sinkronkan periode awal ke Booking VM (kalau sudah ada)
+    loadDashboardStats();
     _syncPeriodToBookingVM();
   }
 
+  // =========================
+  // LOAD PROFILE
+  // =========================
   void _loadProfile() {
     name.value = AppSession.name ?? 'Admin Stay&Co';
     email.value = AppSession.email ?? '-';
   }
 
+  // =========================
+  // SIDEBAR
+  // =========================
   void selectMenu(int index) {
     selectedMenuIndex.value = index;
   }
 
   String get currentMenuTitle => menuItems[selectedMenuIndex.value];
 
+  // =========================
+  // SEARCH
+  // =========================
   void onSearchSubmitted(String value) {
     searchText.value = value.trim();
     if (searchText.value.isNotEmpty) {
@@ -80,7 +104,9 @@ class AdminDashboardViewModel extends GetxController {
     }
   }
 
-  // ✅ TAMBAHAN: helper untuk sync periode ke BookingPayment VM
+  // =========================
+  // SYNC PERIOD TO BOOKING VM
+  // =========================
   void _syncPeriodToBookingVM() {
     try {
       if (Get.isRegistered<AdminBookingPaymentViewModel>()) {
@@ -90,34 +116,30 @@ class AdminDashboardViewModel extends GetxController {
           year: selectedYear.value,
         );
       }
-    } catch (_) {
-      // biarkan saja kalau belum ada / path import beda
-    }
+    } catch (_) {}
   }
 
-  // ganti bulan/tahun lalu reload
   void setMonthYear({required int month, required int year}) {
-    selectedMonth.value = month; // 1-12
-    selectedYear.value = year; // contoh 2026
-
-    // ✅ reload dashboard
+    selectedMonth.value = month;
+    selectedYear.value = year;
     loadDashboardStats();
-
-    // ✅ TAMBAHAN: ikut ubah periode Booking & Pembayaran
     _syncPeriodToBookingVM();
   }
 
-  // helper range bulan
   DateTime _startOfMonth(int year, int month) => DateTime(year, month, 1);
-  DateTime _startOfNextMonth(int year, int month) => DateTime(year, month + 1, 1);
+  DateTime _startOfNextMonth(int year, int month) =>
+      DateTime(year, month + 1, 1);
 
+  // =========================
+  // LOAD DASHBOARD STATS
+  // =========================
   Future<void> loadDashboardStats() async {
     try {
-      // ===== DATA VILLA =====
-      final villasSnap = await FirebaseFirestore.instance.collection('villas').get();
+      // ----- VILLA -----
+      final villasSnap =
+          await FirebaseFirestore.instance.collection('villas').get();
       totalVilla.value = villasSnap.size;
 
-      // simpan list villa untuk halaman "Data Villa"
       final List<Map<String, dynamic>> villaList = [];
       for (final doc in villasSnap.docs) {
         final data = doc.data();
@@ -132,82 +154,83 @@ class AdminDashboardViewModel extends GetxController {
       }
       villas.assignAll(villaList);
 
-      // ===== FILTER booking berdasarkan bulan & tahun terpilih (created_at) =====
-      final int m = selectedMonth.value;
-      final int y = selectedYear.value;
+      // ----- BOOKING -----
+      final from = _startOfMonth(selectedYear.value, selectedMonth.value);
+      final to = _startOfNextMonth(selectedYear.value, selectedMonth.value);
 
-      final DateTime from = _startOfMonth(y, m);
-      final DateTime to = _startOfNextMonth(y, m);
-
-      final Timestamp fromTs = Timestamp.fromDate(from);
-      final Timestamp toTs = Timestamp.fromDate(to);
-
-      // ===== AMBIL SEMUA BOOKING DI BULAN TERPILIH =====
       final bookingsSnap = await FirebaseFirestore.instance
           .collection('bookings')
-          .where('created_at', isGreaterThanOrEqualTo: fromTs)
-          .where('created_at', isLessThan: toTs)
+          .where('created_at',
+              isGreaterThanOrEqualTo: Timestamp.fromDate(from))
+          .where('created_at', isLessThan: Timestamp.fromDate(to))
           .get();
 
       totalPesanan.value = bookingsSnap.size;
 
-      // ===== RESCHEDULE (TANPA QUERY BARU, BIAR TIDAK BUTUH INDEX) =====
       int rescheduleCount = 0;
-
-      // ===== HITUNG PENDAPATAN & PER OWNER =====
       double total = 0;
-      double totalAdminFee = 0;
+      double adminFeeTotal = 0;
       final Map<String, double> tempOwnerMap = {};
 
       for (final doc in bookingsSnap.docs) {
         final data = doc.data();
+        if ((data['status'] ?? '') == 'reschedule') rescheduleCount++;
 
-        // hitung reschedule dari data yang sama
-        final status = (data['status'] ?? '').toString().toLowerCase();
-        if (status == 'reschedule') rescheduleCount++;
-
-        final double amount = (data['total_price'] ?? 0).toDouble();
-        final double adminFee = (data['admin_fee'] ?? 0).toDouble();
+        final amount = (data['total_price'] ?? 0).toDouble();
+        final adminFee = (data['admin_fee'] ?? 0).toDouble();
 
         total += amount;
-        totalAdminFee += adminFee;
+        adminFeeTotal += adminFee;
 
-        // Pendapatan owner = 90% dari total_price
-        final ownerCode = (data['owner_id'] ?? '').toString();
-        if (ownerCode.isNotEmpty) {
-          final ownerShare = amount * 0.90;
-          tempOwnerMap[ownerCode] = (tempOwnerMap[ownerCode] ?? 0) + ownerShare;
+        final ownerId = data['owner_id'] ?? '';
+        if (ownerId.toString().isNotEmpty) {
+          tempOwnerMap[ownerId] =
+              (tempOwnerMap[ownerId] ?? 0) + (amount * 0.9);
         }
       }
 
       totalReschedule.value = rescheduleCount;
-
-      // Update values
       totalPendapatan.value = total;
-      pendapatanAdmin.value = totalAdminFee;
-      pendapatanOwner.value = total * 0.90;
+      pendapatanAdmin.value = adminFeeTotal;
+      pendapatanOwner.value = total * 0.9;
       ownerPendapatanMap.assignAll(tempOwnerMap);
     } catch (e) {
       debugPrint('Error loadDashboardStats: $e');
     }
   }
 
-  // Mengambil Nama Villa dan Pemilik berdasarkan ID Villa
+  // =========================
+  // DETAIL VILLA
+  // =========================
   Future<Map<String, String>> getVillaDetails(String villaId) async {
     try {
-      DocumentSnapshot villaSnapshot =
-          await FirebaseFirestore.instance.collection('villas').doc(villaId).get();
+      final snap = await FirebaseFirestore.instance
+          .collection('villas')
+          .doc(villaId)
+          .get();
 
-      if (villaSnapshot.exists) {
-        var villaData = villaSnapshot.data() as Map<String, dynamic>;
-        String villaName = villaData['name'] ?? 'Unknown Villa';
-        String ownerName = villaData['owner_name'] ?? 'Unknown Owner';
-        return {'villaName': villaName, 'ownerName': ownerName};
-      } else {
-        return {'villaName': 'N/A', 'ownerName': 'N/A'};
-      }
-    } catch (e) {
+      if (!snap.exists) return {'villaName': 'N/A', 'ownerName': 'N/A'};
+
+      final data = snap.data()!;
+      return {
+        'villaName': data['name'] ?? 'Unknown',
+        'ownerName': data['owner_name'] ?? 'Unknown',
+      };
+    } catch (_) {
       return {'villaName': 'Error', 'ownerName': 'Error'};
+    }
+  }
+
+  // =====================================================
+  // 🔥 LOGOUT (DITAMBAHKAN – AMAN)
+  // =====================================================
+  Future<void> logout() async {
+    try {
+      await FirebaseAuth.instance.signOut();
+      await AppSession.clear();
+      Get.offAllNamed(Routes.login);
+    } catch (e) {
+      debugPrint('Logout error: $e');
     }
   }
 }
