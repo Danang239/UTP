@@ -1,5 +1,6 @@
 class AdminOwnerItem {
-  final String id;
+  final String id;       // document ID Firestore
+  final String ownerId;  // owner_id (🔥 KUNCI UTAMA)
   final String name;
   final String email;
   final String phone;
@@ -7,20 +8,27 @@ class AdminOwnerItem {
 
   AdminOwnerItem({
     required this.id,
+    required this.ownerId,
     required this.name,
     required this.email,
     required this.phone,
     required this.role,
   });
 
-  // Membuat instance AdminOwnerItem dari Firestore document
-  factory AdminOwnerItem.fromFirestore(Map<String, dynamic> data, String id) {
+  // ===============================
+  // FROM FIRESTORE
+  // ===============================
+  factory AdminOwnerItem.fromFirestore(
+    Map<String, dynamic> data,
+    String docId,
+  ) {
     return AdminOwnerItem(
-      id: id,
-      name: data['name'] ?? 'Tidak ada nama', // Default jika null
-      email: data['email'] ?? 'Tidak ada email', // Default jika null
-      phone: data['phone'] ?? 'Tidak ada telepon', // Default jika null
-      role: data['role'] ?? 'Tidak ada peran', // Default jika null
+      id: docId,
+      ownerId: data['owner_id'] ?? docId, // 🔥 fallback aman
+      name: data['name'] ?? 'Tidak ada nama',
+      email: data['email'] ?? 'Tidak ada email',
+      phone: data['phone'] ?? 'Tidak ada telepon',
+      role: data['role'] ?? 'owner',
     );
   }
 }
