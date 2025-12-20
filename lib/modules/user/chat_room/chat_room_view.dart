@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:utp_flutter/app_session.dart'; // <-- TAMBAHAN
+import 'package:utp_flutter/app_session.dart';
 import 'chat_room_viewmodel.dart';
 
 class ChatRoomView extends GetView<ChatRoomViewModel> {
@@ -8,11 +8,19 @@ class ChatRoomView extends GetView<ChatRoomViewModel> {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
     return Scaffold(
       appBar: AppBar(
         title: const Text("Chat Pemilik"),
         centerTitle: true,
+
+        // ✅ THEME AWARE (DARK / LIGHT AMAN)
+        backgroundColor: colorScheme.surface,
+        foregroundColor: colorScheme.onSurface,
+        elevation: 0,
       ),
+
       body: Obx(() {
         if (controller.isLoading.value) {
           return const Center(child: CircularProgressIndicator());
@@ -20,7 +28,9 @@ class ChatRoomView extends GetView<ChatRoomViewModel> {
 
         return Column(
           children: [
+            // =====================
             // LIST CHAT
+            // =====================
             Expanded(
               child: controller.messages.isEmpty
                   ? const Center(child: Text("Belum ada chat"))
@@ -32,9 +42,10 @@ class ChatRoomView extends GetView<ChatRoomViewModel> {
                         final text = msg['text'] ?? '';
                         final String? sender = msg['sender_id'];
 
-                        // pakai id user yg sedang login (bisa owner / user)
-                        final bool isMe = sender == AppSession.userDocId;
+                        final bool isMe =
+                            sender == AppSession.userDocId;
 
+                        // ❗ BUBBLE CHAT TETAP (TIDAK IKUT THEME)
                         return Align(
                           alignment: isMe
                               ? Alignment.centerRight
@@ -49,13 +60,15 @@ class ChatRoomView extends GetView<ChatRoomViewModel> {
                               horizontal: 12,
                             ),
                             decoration: BoxDecoration(
-                              color: isMe ? Colors.black : Colors.grey[300],
+                              color:
+                                  isMe ? Colors.black : Colors.grey[300],
                               borderRadius: BorderRadius.circular(12),
                             ),
                             child: Text(
                               text,
                               style: TextStyle(
-                                color: isMe ? Colors.white : Colors.black,
+                                color:
+                                    isMe ? Colors.white : Colors.black,
                               ),
                             ),
                           ),
@@ -64,13 +77,17 @@ class ChatRoomView extends GetView<ChatRoomViewModel> {
                     ),
             ),
 
+            // =====================
             // INPUT AREA
+            // =====================
             SafeArea(
               child: Container(
                 padding: const EdgeInsets.all(12),
-                decoration: const BoxDecoration(
+                decoration: BoxDecoration(
                   border: Border(
-                    top: BorderSide(color: Colors.black12),
+                    top: BorderSide(
+                      color: colorScheme.outlineVariant,
+                    ),
                   ),
                 ),
                 child: Row(
@@ -84,7 +101,8 @@ class ChatRoomView extends GetView<ChatRoomViewModel> {
                           border: OutlineInputBorder(),
                           isDense: true,
                         ),
-                        onChanged: (v) => controller.messageController.value = v,
+                        onChanged: (v) =>
+                            controller.messageController.value = v,
                       ),
                     ),
                     const SizedBox(width: 8),

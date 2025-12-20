@@ -1,44 +1,51 @@
-// lib/modules/edit_profile/edit_profile_viewmodel.dart
 import 'dart:typed_data';
 
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:utp_flutter/app_session.dart';
 
-// >>> TAMBAH INI
+import 'package:utp_flutter/app_session.dart';
 import 'package:utp_flutter/modules/user/profile/profile_viewmodel.dart';
+import 'edit_profile_repository.dart';
 
 class EditProfileViewModel extends GetxController {
-  // TEXT CONTROLLER (dipakai di EditProfileView)
+  // =====================
+  // DEPENDENCY
+  // =====================
+  final EditProfileRepository repo;
+  EditProfileViewModel(this.repo);
+
+  // =====================
+  // TEXT CONTROLLER
+  // =====================
   final nameC = TextEditingController();
   final emailC = TextEditingController();
   final passwordC = TextEditingController();
 
+  // =====================
   // STATE
+  // =====================
   final isLoading = false.obs;
   final imageBytes = Rx<Uint8List?>(null);
 
-  final _db = FirebaseFirestore.instance;
-  final _supabase = Supabase.instance.client;
-
+  /// 🔑 SATU SUMBER KEBENARAN UID (Firestore doc id)
   String get uid {
     final id = AppSession.userDocId;
-    if (id == null) {
-      throw 'Session user tidak ditemukan. Silakan login ulang.';
+    if (id == null || id.isEmpty) {
+      throw 'Session user tidak valid. Silakan login ulang.';
     }
     return id;
   }
 
+  // =====================
+  // INIT
+  // =====================
   @override
   void onInit() {
     super.onInit();
-    // isi awal dari AppSession
-    nameC.text = AppSession.name ?? "";
-    emailC.text = AppSession.email ?? "";
-    passwordC.text = ""; // opsional
+    nameC.text = AppSession.name ?? '';
+    emailC.text = AppSession.email ?? '';
+    passwordC.text = '';
   }
 
   @override
@@ -49,118 +56,88 @@ class EditProfileViewModel extends GetxController {
     super.onClose();
   }
 
-  // ==========================
-  // PILIH FOTO DARI GALERI
-  // ==========================
+  // =====================
+  // PICK IMAGE
+  // =====================
   Future<void> pickImage() async {
     try {
       final picker = ImagePicker();
-      final XFile? image = await picker.pickImage(
+      final XFile? file = await picker.pickImage(
         source: ImageSource.gallery,
-        imageQuality: 70,
+        imageQuality: 75,
       );
 
-      if (image != null) {
-        final bytes = await image.readAsBytes();
-        imageBytes.value = bytes;
+      if (file != null) {
+        imageBytes.value = await file.readAsBytes();
       }
     } catch (e) {
-      Get.snackbar('Error', 'Gagal memilih gambar: $e');
+      Get.snackbar('Error', 'Gagal memilih foto');
     }
   }
 
-  // ==========================
-  // UPLOAD FOTO KE SUPABASE
-  // ==========================
-  Future<String?> _uploadImage() async {
-    if (imageBytes.value == null) return null;
-
-    try {
-      // path tetap pakai uid -> file selalu di-overwrite
-      final String path = 'profile_images/$uid.jpg';
-
-      await _supabase.storage
-          .from('profile')
-          .uploadBinary(
-            path,
-            imageBytes.value!,
-            fileOptions: const FileOptions(
-              upsert: true,
-              contentType: 'image/jpeg',
-            ),
-          );
-
-      // BASE URL
-      final String baseUrl = _supabase.storage
-          .from('profile')
-          .getPublicUrl(path);
-
-      // Tambahkan query param untuk bust cache
-      final String publicUrl =
-          '$baseUrl?t=${DateTime.now().millisecondsSinceEpoch}';
-
-      return publicUrl;
-    } catch (e) {
-      Get.snackbar('Error', 'Gagal upload foto: $e');
-      return null;
-    }
-  }
-
-  // ==========================
-  // SIMPAN PROFIL
-  // ==========================
+  // =====================
+  // SAVE PROFILE (FINAL & STABLE)
+  // =====================
   Future<void> save() async {
+    if (isLoading.value) return;
     isLoading.value = true;
 
     try {
-      final userRef = _db.collection('users').doc(uid);
+      final name = nameC.text.trim();
+      final email = emailC.text.trim();
 
-      final updatedName = nameC.text.trim();
-      final updatedEmail = emailC.text.trim();
-      final updatedPassword = passwordC.text.trim();
+      if (name.isEmpty || email.isEmpty) {
+        throw 'Nama dan email wajib diisi';
+      }
 
-      // Upload foto kalau ada yang baru
-      final profileUrl = await _uploadImage();
+      // =====================
+      // UPLOAD FOTO (OPTIONAL)
+      // =====================
+      String? photoUrl;
+      if (imageBytes.value != null) {
+        photoUrl = await repo.uploadProfileImage(
+          userId: uid,
+          bytes: imageBytes.value!,
+        );
+      }
 
-      final Map<String, dynamic> updateData = {
-        'name': updatedName,
-        'email': updatedEmail,
+      // =====================
+      // UPDATE FIRESTORE
+      // =====================
+      final updateData = <String, dynamic>{
+        'name': name,
+        'email': email,
+        if (photoUrl != null) 'profile_img': photoUrl,
+        'updated_at': DateTime.now(),
       };
 
-      if (updatedPassword.isNotEmpty) {
-        updateData['password'] = updatedPassword;
+      await repo.updateUserProfile(userId: uid, data: updateData);
+
+      // =====================
+      // UPDATE SESSION
+      // =====================
+      AppSession.name = name;
+      AppSession.email = email;
+      if (photoUrl != null) {
+        AppSession.profileImg = photoUrl;
       }
 
-      if (profileUrl != null) {
-        updateData['profile_img'] = profileUrl;
-      }
-
-      // simpan ke Firestore
-      await userRef.update(updateData);
-
-      // update AppSession lokal supaya ProfileView bisa pakai juga
-      AppSession.name = updatedName;
-      AppSession.email = updatedEmail;
-      if (profileUrl != null) {
-        AppSession.profileImg = profileUrl;
-      }
-
-      // ==== TRIGGER REFRESH PROFILE VIEW ====
-      try {
+      // =====================
+      // REFRESH PROFILE VIEW
+      // =====================
+      if (Get.isRegistered<ProfileViewModel>()) {
         Get.find<ProfileViewModel>().refreshFromSession();
-      } catch (_) {
-        // kalau ProfileViewModel belum ter-register, abaikan saja
       }
 
-      isLoading.value = false;
-
-      // kembali ke halaman sebelumnya
-      Get.back(); // ga perlu result lagi, karena kita sudah refresh manual
-
+      // =====================
+      // BACK TO PROFILE
+      // =====================
+      Get.back(result: true);
       Get.snackbar('Berhasil', 'Profil berhasil diperbarui');
     } catch (e) {
+      Get.snackbar('Error', e.toString());
+    } finally {
       isLoading.value = false;
-      Get.snackbar('Error', 'Gagal menyimpan profil: $e');
     }
   }
 }

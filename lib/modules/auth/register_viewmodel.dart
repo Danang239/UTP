@@ -4,6 +4,7 @@ import 'package:get/get.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:utp_flutter/app_session.dart';
 import 'package:utp_flutter/main.dart';
+import 'package:utp_flutter/modules/user/main/main_page.dart';
 
 class RegisterViewModel extends GetxController {
   // =====================

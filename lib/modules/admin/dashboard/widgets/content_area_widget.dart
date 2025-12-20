@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:utp_flutter/modules/admin/booking_payment/admin_booking_payment_view.dart';
+import 'package:utp_flutter/modules/admin/admin_messages/admin_messages_view.dart';
 
 import '../admin_dashboard_viewmodel.dart';
 
@@ -9,7 +10,6 @@ import '../../dashboard/pages/dashboard_page.dart';
 import '../../dashboard/pages/data_villa_page.dart';
 import '../../dashboard/pages/data_user_page.dart';
 import '../../dashboard/pages/booking_page.dart';
-import '../../dashboard/pages/pesan_page.dart';
 import '../../dashboard/pages/bikin_owner_page.dart';
 
 class ContentAreaWidget extends GetView<AdminDashboardViewModel> {
@@ -20,7 +20,6 @@ class ContentAreaWidget extends GetView<AdminDashboardViewModel> {
     return Obx(() {
       final index = controller.selectedMenuIndex.value;
 
-      // ini adalah child yang nanti ditampilkan sesuai menu
       Widget child;
 
       switch (index) {
@@ -29,8 +28,7 @@ class ContentAreaWidget extends GetView<AdminDashboardViewModel> {
           break;
 
         case 1:
-          // PENTING: DataVillaPage TIDAK boleh const
-          child = DataVillaPage();
+          child = DataVillaPage(); // tetap non-const
           break;
 
         case 2:
@@ -42,7 +40,7 @@ class ContentAreaWidget extends GetView<AdminDashboardViewModel> {
           break;
 
         case 4:
-          child = const PesanPage();
+          child = const AdminMessagesView();
           break;
 
         case 5:

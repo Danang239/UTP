@@ -9,7 +9,10 @@ class PaymentView extends GetView<PaymentController> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
     return Scaffold(
+      backgroundColor: theme.scaffoldBackgroundColor,
       appBar: AppBar(
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
@@ -23,6 +26,9 @@ class PaymentView extends GetView<PaymentController> {
             onPressed: () => Get.back(),
           ),
         ],
+        backgroundColor: theme.appBarTheme.backgroundColor,
+        foregroundColor: theme.appBarTheme.foregroundColor,
+        elevation: 0,
       ),
       body: SafeArea(
         child: Padding(
@@ -30,15 +36,15 @@ class PaymentView extends GetView<PaymentController> {
           child: Obx(() {
             switch (controller.step.value) {
               case 0:
-                return _buildReviewStep();
+                return _buildReviewStep(context);
               case 1:
-                return _buildMethodStep();
+                return _buildMethodStep(context);
               case 2:
                 return controller.method.value == 'transfer'
-                    ? _buildTransferDetailStep()
-                    : _buildQrisStep();
+                    ? _buildTransferDetailStep(context)
+                    : _buildQrisStep(context);
               case 3:
-                return _buildUploadProofStep();
+                return _buildUploadProofStep(context);
               case 4:
                 return _buildSuccessStep(context);
               default:
@@ -50,12 +56,12 @@ class PaymentView extends GetView<PaymentController> {
     );
   }
 
-  // ====== STEP 0: Tinjau & lanjutkan ======
-  Widget _buildReviewStep() {
+  // ====== STEP 0: Review ======
+  Widget _buildReviewStep(BuildContext context) {
+    final theme = Theme.of(context);
     final dateText =
         '${controller.formatDate(controller.checkIn)}  -  ${controller.formatDate(controller.checkOut)}';
 
-    // AMBIL URL FOTO PERTAMA DARI ARGUMENTS (optional)
     final args = Get.arguments as Map<String, dynamic>?;
     final String? imageUrl = args?['imageUrl'] as String?;
 
@@ -65,12 +71,11 @@ class PaymentView extends GetView<PaymentController> {
         Container(
           padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
-            color: Colors.grey[200],
+            color: theme.cardColor,
             borderRadius: BorderRadius.circular(12),
           ),
           child: Row(
             children: [
-              // === FOTO VILLA (SAMA KAYAK HOME) ===
               ClipRRect(
                 borderRadius: BorderRadius.circular(12),
                 child: SizedBox(
@@ -81,15 +86,20 @@ class PaymentView extends GetView<PaymentController> {
                           imageUrl,
                           fit: BoxFit.cover,
                           errorBuilder: (_, __, ___) => Container(
-                            color: Colors.grey[400],
-                            child: const Icon(Icons.image_not_supported),
+                            color: theme.colorScheme.surface,
+                            child: Icon(
+                              Icons.image_not_supported,
+                              color: theme.colorScheme.onSurface
+                                  .withOpacity(0.6),
+                            ),
                           ),
                         )
                       : Container(
-                          color: Colors.grey[400],
-                          child: const Icon(
+                          color: theme.colorScheme.surface,
+                          child: Icon(
                             Icons.home_work_outlined,
-                            color: Colors.white,
+                            color: theme.colorScheme.onSurface
+                                .withOpacity(0.6),
                           ),
                         ),
                 ),
@@ -101,24 +111,20 @@ class PaymentView extends GetView<PaymentController> {
                   children: [
                     Text(
                       controller.villaName,
-                      style: const TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 16,
-                      ),
+                      style: theme.textTheme.bodyLarge
+                          ?.copyWith(fontWeight: FontWeight.bold),
                     ),
                     const SizedBox(height: 8),
-                    Text(dateText, style: const TextStyle(fontSize: 12)),
+                    Text(dateText, style: theme.textTheme.bodySmall),
                     const SizedBox(height: 8),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        const Text('Total', style: TextStyle(fontSize: 12)),
+                        Text('Total', style: theme.textTheme.bodySmall),
                         Text(
                           controller.formatRupiah(controller.totalPrice),
-                          style: const TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 14,
-                          ),
+                          style: theme.textTheme.bodyMedium
+                              ?.copyWith(fontWeight: FontWeight.bold),
                         ),
                       ],
                     ),
@@ -134,29 +140,33 @@ class PaymentView extends GetView<PaymentController> {
           child: ElevatedButton(
             onPressed: controller.goToNextStep,
             style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.black,
+              backgroundColor: theme.colorScheme.primary,
+              foregroundColor: theme.colorScheme.onPrimary,
               padding: const EdgeInsets.symmetric(vertical: 14),
             ),
-            child: const Text('Pesan', style: TextStyle(color: Colors.white)),
+            child: const Text('Pesan'),
           ),
         ),
       ],
     );
   }
 
-  // ====== STEP 1: Pilih metode ======
-  Widget _buildMethodStep() {
+  // ====== STEP 1: Method ======
+  Widget _buildMethodStep(BuildContext context) {
+    final theme = Theme.of(context);
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
+        Text(
           'Tambahkan metode pembayaran',
-          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+          style: theme.textTheme.titleMedium
+              ?.copyWith(fontWeight: FontWeight.bold),
         ),
         const SizedBox(height: 16),
         Container(
           decoration: BoxDecoration(
-            color: Colors.grey[200],
+            color: theme.cardColor,
             borderRadius: BorderRadius.circular(12),
           ),
           child: Column(
@@ -171,7 +181,7 @@ class PaymentView extends GetView<PaymentController> {
                 title: const Text('Transfer Bank'),
                 secondary: const Icon(Icons.account_balance),
               ),
-              const Divider(height: 0),
+              Divider(color: theme.dividerColor, height: 0),
               RadioListTile<String>(
                 value: 'qris',
                 groupValue: controller.method.value,
@@ -179,7 +189,7 @@ class PaymentView extends GetView<PaymentController> {
                   if (val == null) return;
                   controller.method.value = val;
                 },
-                title: const Text('Qris'),
+                title: const Text('QRIS'),
                 secondary: const Icon(Icons.qr_code),
               ),
             ],
@@ -191,57 +201,52 @@ class PaymentView extends GetView<PaymentController> {
           child: ElevatedButton(
             onPressed: controller.goToNextStep,
             style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.black,
+              backgroundColor: theme.colorScheme.primary,
+              foregroundColor: theme.colorScheme.onPrimary,
               padding: const EdgeInsets.symmetric(vertical: 14),
             ),
-            child: const Text(
-              'Selanjutnya',
-              style: TextStyle(color: Colors.white),
-            ),
+            child: const Text('Selanjutnya'),
           ),
         ),
       ],
     );
   }
 
-  // ====== STEP 2A: Transfer (pilih bank) ======
-  Widget _buildTransferDetailStep() {
+  // ====== STEP 2A: Transfer ======
+  Widget _buildTransferDetailStep(BuildContext context) {
+    final theme = Theme.of(context);
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // header total
         Container(
           padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
-            color: Colors.grey[100],
+            color: theme.cardColor,
             borderRadius: BorderRadius.circular(12),
           ),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Text('Total Pembayaran', style: TextStyle(fontSize: 14)),
+              Text('Total Pembayaran', style: theme.textTheme.bodyMedium),
               Text(
                 controller.formatRupiah(controller.totalPrice),
-                style: const TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.bold,
-                ),
+                style: theme.textTheme.bodyMedium
+                    ?.copyWith(fontWeight: FontWeight.bold),
               ),
             ],
           ),
         ),
         const SizedBox(height: 16),
-
-        const Text(
+        Text(
           'Pilih bank tujuan',
-          style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
+          style: theme.textTheme.bodyMedium
+              ?.copyWith(fontWeight: FontWeight.w600),
         ),
         const SizedBox(height: 8),
-
-        // pilih bank
         Container(
           decoration: BoxDecoration(
-            color: Colors.grey[200],
+            color: theme.cardColor,
             borderRadius: BorderRadius.circular(12),
           ),
           child: Column(
@@ -259,13 +264,12 @@ class PaymentView extends GetView<PaymentController> {
           ),
         ),
         const SizedBox(height: 16),
-
         Expanded(
           child: SingleChildScrollView(
             child: Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: Colors.grey[100],
+                color: theme.cardColor,
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Column(
@@ -280,103 +284,67 @@ class PaymentView extends GetView<PaymentController> {
                         children: [
                           Text(
                             'Bank ${controller.selectedBank.value}',
-                            style: const TextStyle(
-                              fontWeight: FontWeight.bold,
-                              fontSize: 14,
-                            ),
+                            style: theme.textTheme.bodyMedium
+                                ?.copyWith(fontWeight: FontWeight.bold),
                           ),
                           const SizedBox(height: 4),
                           Text(
                             'No. Rekening / VA',
-                            style: TextStyle(
-                              fontSize: 12,
-                              color: Colors.grey[700],
-                            ),
+                            style: theme.textTheme.bodySmall,
                           ),
                           Text(
                             controller.selectedAccount,
-                            style: const TextStyle(
-                              fontSize: 13,
-                              fontWeight: FontWeight.w500,
-                            ),
+                            style: theme.textTheme.bodyMedium
+                                ?.copyWith(fontWeight: FontWeight.w600),
                           ),
                         ],
                       ),
                       const Spacer(),
                       TextButton(
-                        onPressed: () {
-                          // TODO: copy ke clipboard kalau mau
-                        },
+                        onPressed: () {},
                         child: const Text('SALIN'),
                       ),
                     ],
                   ),
                   const SizedBox(height: 12),
-                  const Divider(),
-
+                  Divider(color: theme.dividerColor),
                   ExpansionTile(
                     tilePadding: EdgeInsets.zero,
-                    title: const Text(
-                      'Petunjuk Transfer mBanking',
-                      style: TextStyle(fontSize: 13),
-                    ),
+                    title: const Text('Petunjuk Transfer mBanking'),
                     children: const [
                       ListTile(
                         dense: true,
-                        contentPadding: EdgeInsets.zero,
-                        title: Text(
-                          '1. Buka aplikasi mBanking sesuai bank.',
-                          style: TextStyle(fontSize: 12),
-                        ),
+                        title: Text('1. Buka aplikasi mBanking sesuai bank.'),
                       ),
                       ListTile(
                         dense: true,
-                        contentPadding: EdgeInsets.zero,
                         title: Text(
-                          '2. Pilih menu transfer ke rekening / virtual account.',
-                          style: TextStyle(fontSize: 12),
-                        ),
+                            '2. Pilih menu transfer ke rekening / VA.'),
                       ),
                       ListTile(
                         dense: true,
-                        contentPadding: EdgeInsets.zero,
                         title: Text(
-                          '3. Masukkan nomor rekening di atas dan jumlah sesuai tagihan.',
-                          style: TextStyle(fontSize: 12),
-                        ),
+                            '3. Masukkan nomor & jumlah sesuai tagihan.'),
                       ),
                     ],
                   ),
                   ExpansionTile(
                     tilePadding: EdgeInsets.zero,
-                    title: const Text(
-                      'Petunjuk Transfer ATM',
-                      style: TextStyle(fontSize: 13),
-                    ),
+                    title: const Text('Petunjuk Transfer ATM'),
                     children: const [
                       ListTile(
                         dense: true,
-                        contentPadding: EdgeInsets.zero,
-                        title: Text(
-                          '1. Masukkan kartu ATM dan PIN.',
-                          style: TextStyle(fontSize: 12),
-                        ),
+                        title: Text('1. Masukkan kartu ATM dan PIN.'),
                       ),
                       ListTile(
                         dense: true,
-                        contentPadding: EdgeInsets.zero,
                         title: Text(
-                          '2. Pilih menu transfer antar rekening/bank.',
-                          style: TextStyle(fontSize: 12),
-                        ),
+                            '2. Pilih menu transfer antar bank.'),
                       ),
                       ListTile(
                         dense: true,
-                        contentPadding: EdgeInsets.zero,
                         title: Text(
-                          '3. Masukkan nomor rekening di atas dan jumlah sesuai tagihan.',
-                          style: TextStyle(fontSize: 12),
-                        ),
+                            '3. Masukkan nomor & jumlah sesuai tagihan.'),
                       ),
                     ],
                   ),
@@ -385,20 +353,17 @@ class PaymentView extends GetView<PaymentController> {
             ),
           ),
         ),
-
         const SizedBox(height: 12),
         SizedBox(
           width: double.infinity,
           child: ElevatedButton(
             onPressed: controller.goToNextStep,
             style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.black,
+              backgroundColor: theme.colorScheme.primary,
+              foregroundColor: theme.colorScheme.onPrimary,
               padding: const EdgeInsets.symmetric(vertical: 14),
             ),
-            child: const Text(
-              'Lanjutkan',
-              style: TextStyle(color: Colors.white),
-            ),
+            child: const Text('Lanjutkan'),
           ),
         ),
       ],
@@ -406,45 +371,36 @@ class PaymentView extends GetView<PaymentController> {
   }
 
   // ====== STEP 2B: QRIS ======
-  Widget _buildQrisStep() {
+  Widget _buildQrisStep(BuildContext context) {
+    final theme = Theme.of(context);
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
         const SizedBox(height: 16),
-        const Center(
-          child: Text(
-            'Qris',
-            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-          ),
-        ),
+        Text('QRIS',
+            style: theme.textTheme.titleMedium
+                ?.copyWith(fontWeight: FontWeight.bold)),
         const SizedBox(height: 24),
-        Center(
-          child: Container(
-            width: 240,
-            height: 240,
-            decoration: BoxDecoration(
-              color: Colors.grey[300],
-              borderRadius: BorderRadius.circular(24),
-            ),
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(24),
-              child: Image.asset(
-                'assets/qris_example.png',
-                fit: BoxFit.cover,
-                errorBuilder: (context, error, stack) {
-                  return const Center(
-                    child: Text('QRIS CODE', style: TextStyle(fontSize: 16)),
-                  );
-                },
-              ),
+        Container(
+          width: 240,
+          height: 240,
+          decoration: BoxDecoration(
+            color: theme.colorScheme.surface,
+            borderRadius: BorderRadius.circular(24),
+          ),
+          child: Center(
+            child: Text(
+              'QRIS CODE',
+              style: theme.textTheme.bodyMedium,
             ),
           ),
         ),
         const SizedBox(height: 24),
-        const Text(
+        Text(
           'Silakan scan QRIS di atas\nmenggunakan e-wallet / mBanking Anda.',
           textAlign: TextAlign.center,
-          style: TextStyle(fontSize: 13),
+          style: theme.textTheme.bodySmall,
         ),
         const Spacer(),
         SizedBox(
@@ -452,21 +408,20 @@ class PaymentView extends GetView<PaymentController> {
           child: ElevatedButton(
             onPressed: controller.goToNextStep,
             style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.black,
+              backgroundColor: theme.colorScheme.primary,
+              foregroundColor: theme.colorScheme.onPrimary,
               padding: const EdgeInsets.symmetric(vertical: 14),
             ),
-            child: const Text(
-              'Lanjutkan',
-              style: TextStyle(color: Colors.white),
-            ),
+            child: const Text('Lanjutkan'),
           ),
         ),
       ],
     );
   }
 
-  // ====== STEP 3: Upload bukti ======
-  Widget _buildUploadProofStep() {
+  // ====== STEP 3: Upload Proof ======
+  Widget _buildUploadProofStep(BuildContext context) {
+    final theme = Theme.of(context);
     final file = controller.proofFile.value;
 
     return Column(
@@ -476,53 +431,52 @@ class PaymentView extends GetView<PaymentController> {
           controller.method.value == 'transfer'
               ? 'Upload Bukti Transfer'
               : 'Upload Bukti Pembayaran QRIS',
-          style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+          style: theme.textTheme.titleMedium
+              ?.copyWith(fontWeight: FontWeight.bold),
         ),
         const SizedBox(height: 16),
         Container(
           padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
-            color: Colors.grey[100],
+            color: theme.cardColor,
             borderRadius: BorderRadius.circular(12),
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                'Total Pembayaran',
-                style: TextStyle(fontSize: 13, color: Colors.grey[700]),
-              ),
+              Text('Total Pembayaran',
+                  style: theme.textTheme.bodySmall),
               const SizedBox(height: 4),
               Text(
                 controller.formatRupiah(controller.totalPrice),
-                style: const TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                ),
+                style: theme.textTheme.bodyLarge
+                    ?.copyWith(fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 12),
               Text(
                 'Metode: ${controller.method.value == 'transfer' ? 'Transfer Bank (${controller.selectedBank.value})' : 'QRIS'}',
-                style: const TextStyle(fontSize: 13),
+                style: theme.textTheme.bodySmall,
               ),
             ],
           ),
         ),
         const SizedBox(height: 20),
-        const Text(
+        Text(
           'Upload bukti pembayaran',
-          style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
+          style: theme.textTheme.bodyMedium
+              ?.copyWith(fontWeight: FontWeight.w600),
         ),
         const SizedBox(height: 8),
         GestureDetector(
           onTap: controller.pickProof,
           child: Container(
             width: double.infinity,
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
+            padding:
+                const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
             decoration: BoxDecoration(
+              color: theme.cardColor,
               borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: Colors.grey.shade400),
-              color: Colors.white,
+              border: Border.all(color: theme.dividerColor),
             ),
             child: Row(
               children: [
@@ -530,10 +484,13 @@ class PaymentView extends GetView<PaymentController> {
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(
-                    file == null ? 'Pilih gambar bukti pembayaran' : file.name,
-                    style: TextStyle(
-                      fontSize: 13,
-                      color: file == null ? Colors.grey[600] : Colors.black,
+                    file == null
+                        ? 'Pilih gambar bukti pembayaran'
+                        : file.name,
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: file == null
+                          ? theme.colorScheme.onSurface.withOpacity(0.6)
+                          : theme.colorScheme.onSurface,
                     ),
                     overflow: TextOverflow.ellipsis,
                   ),
@@ -543,9 +500,10 @@ class PaymentView extends GetView<PaymentController> {
           ),
         ),
         const SizedBox(height: 4),
-        const Text(
-          'Format: jpg, png. Bisa berupa screenshot atau foto struk pembayaran.',
-          style: TextStyle(fontSize: 10, color: Colors.grey),
+        Text(
+          'Format: jpg, png.',
+          style: theme.textTheme.bodySmall
+              ?.copyWith(color: theme.hintColor),
         ),
         const Spacer(),
         SizedBox(
@@ -554,51 +512,51 @@ class PaymentView extends GetView<PaymentController> {
             onPressed:
                 controller.saving.value ? null : controller.confirmPayment,
             style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.black,
+              backgroundColor: theme.colorScheme.primary,
+              foregroundColor: theme.colorScheme.onPrimary,
               padding: const EdgeInsets.symmetric(vertical: 14),
             ),
             child: controller.saving.value
                 ? const SizedBox(
                     height: 18,
                     width: 18,
-                    child: CircularProgressIndicator(
-                      strokeWidth: 2,
-                      color: Colors.white,
-                    ),
+                    child: CircularProgressIndicator(strokeWidth: 2),
                   )
-                : const Text(
-                    'Saya sudah bayar',
-                    style: TextStyle(color: Colors.white),
-                  ),
+                : const Text('Saya sudah bayar'),
           ),
         ),
       ],
     );
   }
 
-  // ====== STEP 4: Sukses ======
+  // ====== STEP 4: Success ======
   Widget _buildSuccessStep(BuildContext context) {
+    final theme = Theme.of(context);
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
         const SizedBox(height: 40),
-        const Icon(Icons.check_circle, color: Colors.green, size: 72),
+        Icon(Icons.check_circle,
+            color: theme.colorScheme.primary, size: 72),
         const SizedBox(height: 20),
-        const Text(
+        Text(
           'Booking Berhasil',
-          style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+          style: theme.textTheme.titleLarge
+              ?.copyWith(fontWeight: FontWeight.bold),
           textAlign: TextAlign.center,
         ),
         const SizedBox(height: 12),
-        const Text(
-          'Terima kasih atas booking-nya.\nPembayaran kamu akan dicek oleh admin.',
-          style: TextStyle(fontSize: 14),
+        Text(
+          'Terima kasih atas booking-nya.\nPembayaran akan dicek admin.',
+          style: theme.textTheme.bodyMedium,
           textAlign: TextAlign.center,
         ),
         const SizedBox(height: 8),
-        const Text(
-          'Status akan berubah menjadi PAID\nsetelah admin memverifikasi bukti.',
-          style: TextStyle(fontSize: 12, color: Colors.grey),
+        Text(
+          'Status akan berubah menjadi PAID\nsetelah verifikasi.',
+          style: theme.textTheme.bodySmall
+              ?.copyWith(color: theme.hintColor),
           textAlign: TextAlign.center,
         ),
         const Spacer(),
@@ -609,13 +567,11 @@ class PaymentView extends GetView<PaymentController> {
               Navigator.of(context).popUntil((route) => route.isFirst);
             },
             style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.black,
+              backgroundColor: theme.colorScheme.primary,
+              foregroundColor: theme.colorScheme.onPrimary,
               padding: const EdgeInsets.symmetric(vertical: 14),
             ),
-            child: const Text(
-              'Kembali ke Beranda',
-              style: TextStyle(color: Colors.white),
-            ),
+            child: const Text('Kembali ke Beranda'),
           ),
         ),
       ],

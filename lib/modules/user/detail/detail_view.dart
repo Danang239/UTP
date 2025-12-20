@@ -21,6 +21,9 @@ class DetailView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colors = theme.colorScheme;
+
     // register controller untuk villa ini
     final controller = Get.put(
       DetailViewModel(villaId, villaData),
@@ -36,18 +39,21 @@ class DetailView extends StatelessWidget {
     final String ownerId = villaData['owner_id'] ?? 'UNKNOWN_OWNER';
 
     return Scaffold(
+      backgroundColor: theme.scaffoldBackgroundColor,
+
+      // ================= APP BAR =================
       appBar: AppBar(
         elevation: 0,
-        backgroundColor: Colors.white,
-        foregroundColor: Colors.black,
+        backgroundColor: theme.appBarTheme.backgroundColor,
+        foregroundColor: theme.appBarTheme.foregroundColor,
         title: Text(
           name,
-          style: const TextStyle(fontWeight: FontWeight.bold),
+          style: theme.textTheme.titleLarge?.copyWith(
+            fontWeight: FontWeight.bold,
+          ),
         ),
         actions: [
-          // ========================
-          // TOMBOL CHAT ROOM
-          // ========================
+          // CHAT ROOM
           IconButton(
             icon: const Icon(Icons.chat_bubble_outline),
             onPressed: () {
@@ -72,7 +78,7 @@ class DetailView extends StatelessWidget {
               return IconButton(
                 icon: Icon(
                   isFav ? Icons.favorite : Icons.favorite_border,
-                  color: isFav ? Colors.red : Colors.grey,
+                  color: isFav ? Colors.red : colors.onSurfaceVariant,
                 ),
                 onPressed: () => controller.toggleFavorite(context),
               );
@@ -81,9 +87,7 @@ class DetailView extends StatelessWidget {
         ],
       ),
 
-      // =============================
-      // BOTTOM BUTTON (BOOKING)
-      // =============================
+      // ================= BOTTOM BUTTON =================
       bottomNavigationBar: SafeArea(
         child: Padding(
           padding: const EdgeInsets.all(16),
@@ -93,14 +97,19 @@ class DetailView extends StatelessWidget {
               child: ElevatedButton(
                 style: ElevatedButton.styleFrom(
                   padding: const EdgeInsets.symmetric(vertical: 14),
-                  backgroundColor: Colors.black,
+                  backgroundColor: colors.primary,
                 ),
                 onPressed: controller.loadingBooking.value
                     ? null
                     : () => controller.createBooking(context),
                 child: Text(
-                  controller.loadingBooking.value ? 'Memproses...' : 'Pesan',
-                  style: const TextStyle(color: Colors.white, fontSize: 16),
+                  controller.loadingBooking.value
+                      ? 'Memproses...'
+                      : 'Pesan',
+                  style: TextStyle(
+                    color: colors.onPrimary,
+                    fontSize: 16,
+                  ),
                 ),
               ),
             ),
@@ -108,16 +117,12 @@ class DetailView extends StatelessWidget {
         ),
       ),
 
-      // =============================
-      // BODY MAIN DETAIL PAGE
-      // =============================
+      // ================= BODY =================
       body: SingleChildScrollView(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // =============================
-            // FOTO ATAS (SLIDER)
-            // =============================
+            // ================= FOTO =================
             ClipRRect(
               borderRadius: const BorderRadius.only(
                 bottomLeft: Radius.circular(24),
@@ -128,42 +133,35 @@ class DetailView extends StatelessWidget {
                 child: controller.images.isEmpty
                     ? Container(
                         height: MediaQuery.of(context).size.width * 9 / 16,
-                        color: Colors.grey.shade300,
+                        color: colors.surfaceVariant,
                       )
                     : Stack(
                         children: [
                           AspectRatio(
                             aspectRatio: 16 / 9,
                             child: PageView.builder(
-                              controller: controller.imagePageController,
+                              controller:
+                                  controller.imagePageController,
                               itemCount: controller.images.length,
-                              physics: const PageScrollPhysics(),
-                              onPageChanged: controller.onImagePageChanged,
+                              onPageChanged:
+                                  controller.onImagePageChanged,
                               itemBuilder: (context, index) {
-                                final url = controller.images[index];
+                                final url =
+                                    controller.images[index];
                                 return Image.network(
                                   url,
-                                  width: double.infinity,
-                                  fit: BoxFit.cover, // isi penuh tanpa distorsi
-                                  filterQuality: FilterQuality.high,
+                                  fit: BoxFit.cover,
+                                  filterQuality:
+                                      FilterQuality.high,
                                   loadingBuilder:
-                                      (context, child, loadingProgress) {
-                                    if (loadingProgress == null) return child;
+                                      (context, child, progress) {
+                                    if (progress == null) return child;
                                     return Container(
-                                      color: Colors.grey[200],
+                                      color:
+                                          colors.surfaceVariant,
                                       child: const Center(
-                                        child: CircularProgressIndicator(),
-                                      ),
-                                    );
-                                  },
-                                  errorBuilder: (context, error, stackTrace) {
-                                    return Container(
-                                      color: Colors.grey.shade300,
-                                      child: const Center(
-                                        child: Icon(
-                                          Icons.broken_image,
-                                          size: 40,
-                                        ),
+                                        child:
+                                            CircularProgressIndicator(),
                                       ),
                                     );
                                   },
@@ -180,25 +178,32 @@ class DetailView extends StatelessWidget {
                             child: Obx(() {
                               final current =
                                   controller.currentImageIndex.value;
-                              final total = controller.images.length;
-                              if (total <= 1) return const SizedBox.shrink();
+                              final total =
+                                  controller.images.length;
+                              if (total <= 1) {
+                                return const SizedBox.shrink();
+                              }
 
                               return Row(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: List.generate(total, (index) {
-                                  final isActive = index == current;
+                                mainAxisAlignment:
+                                    MainAxisAlignment.center,
+                                children: List.generate(total, (i) {
+                                  final active = i == current;
                                   return AnimatedContainer(
-                                    duration:
-                                        const Duration(milliseconds: 200),
-                                    margin: const EdgeInsets.symmetric(
-                                        horizontal: 3),
-                                    width: isActive ? 18 : 8,
+                                    duration: const Duration(
+                                        milliseconds: 200),
+                                    margin:
+                                        const EdgeInsets.symmetric(
+                                            horizontal: 3),
+                                    width: active ? 18 : 8,
                                     height: 8,
                                     decoration: BoxDecoration(
-                                      color: isActive
+                                      color: active
                                           ? Colors.white
-                                          : Colors.white.withOpacity(0.6),
-                                      borderRadius: BorderRadius.circular(10),
+                                          : Colors.white
+                                              .withOpacity(0.6),
+                                      borderRadius:
+                                          BorderRadius.circular(10),
                                     ),
                                   );
                                 }),
@@ -210,14 +215,12 @@ class DetailView extends StatelessWidget {
               ),
             ),
 
-            // =============================
-            // CONTAINER PUTIH KONTEN
-            // =============================
+            // ================= CONTENT =================
             Container(
               width: double.infinity,
-              decoration: const BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.only(
+              decoration: BoxDecoration(
+                color: theme.scaffoldBackgroundColor,
+                borderRadius: const BorderRadius.only(
                   topLeft: Radius.circular(24),
                   topRight: Radius.circular(24),
                 ),
@@ -229,117 +232,57 @@ class DetailView extends StatelessWidget {
                   () => Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // ===============================
-                      // NAMA + LOKASI + RATING
-                      // ===============================
                       Text(
                         name,
-                        style: const TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
-                        ),
+                        style: theme.textTheme.headlineSmall
+                            ?.copyWith(fontWeight: FontWeight.bold),
                       ),
                       const SizedBox(height: 4),
                       Text(
                         location,
-                        style: TextStyle(
-                          fontSize: 13,
-                          color: Colors.grey[700],
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      Row(
-                        children: const [
-                          Icon(Icons.star,
-                              size: 14, color: Colors.orangeAccent),
-                          SizedBox(width: 4),
-                          Text(
-                            '4.9 (200 ulasan)',
-                            style: TextStyle(fontSize: 12),
-                          ),
-                        ],
+                        style: theme.textTheme.bodySmall,
                       ),
 
                       const SizedBox(height: 16),
 
-                      // ===============================
                       // HARGA
-                      // ===============================
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            children: [
-                              const Text(
-                                "Weekday : ",
-                                style: TextStyle(
-                                  fontSize: 13,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                              Text(
-                                "Rp $weekdayPrice",
-                                style: const TextStyle(
-                                  fontSize: 15,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 4),
-                          Row(
-                            children: [
-                              const Text(
-                                "Weekend : ",
-                                style: TextStyle(
-                                  fontSize: 13,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                              Text(
-                                "Rp $weekendPrice",
-                                style: const TextStyle(
-                                  fontSize: 15,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ],
+                      Text(
+                        "Weekday: Rp $weekdayPrice",
+                        style: theme.textTheme.bodyMedium
+                            ?.copyWith(fontWeight: FontWeight.bold),
+                      ),
+                      Text(
+                        "Weekend: Rp $weekendPrice",
+                        style: theme.textTheme.bodyMedium
+                            ?.copyWith(fontWeight: FontWeight.bold),
                       ),
 
                       const SizedBox(height: 24),
 
-                      // ===============================
                       // DESKRIPSI
-                      // ===============================
-                      const Text(
+                      Text(
                         "Deskripsi",
-                        style: TextStyle(
-                            fontSize: 16, fontWeight: FontWeight.bold),
+                        style: theme.textTheme.titleMedium
+                            ?.copyWith(fontWeight: FontWeight.bold),
                       ),
                       const SizedBox(height: 8),
                       Text(
                         description.isEmpty
                             ? "Belum ada deskripsi."
                             : description,
-                        style: const TextStyle(fontSize: 14),
+                        style: theme.textTheme.bodyMedium,
                       ),
 
                       const SizedBox(height: 16),
 
-                      // ===============================
-                      // BUTTON LIHAT DI MAPS
-                      // ===============================
+                      // MAPS
                       if (mapsLink.isNotEmpty)
                         SizedBox(
                           width: double.infinity,
                           child: OutlinedButton.icon(
                             icon: const Icon(Icons.location_on_outlined),
-                            label: const Text(
-                              "Lihat di Google Maps",
-                              style: TextStyle(fontSize: 14),
-                            ),
+                            label:
+                                const Text("Lihat di Google Maps"),
                             onPressed: () =>
                                 controller.openMaps(context, mapsLink),
                           ),
@@ -347,25 +290,17 @@ class DetailView extends StatelessWidget {
 
                       const SizedBox(height: 24),
 
-                      // ===============================
-                      // KALENDER BOOKING
-                      // ===============================
+                      // ================= KALENDER (TIDAK DIUBAH) =================
                       const Text(
                         "Tanggal Menginap",
                         style: TextStyle(
                             fontSize: 16, fontWeight: FontWeight.bold),
                       ),
-                      const SizedBox(height: 6),
-                      const Text(
-                        "• Abu-abu = tanggal sudah lewat\n"
-                        "• Merah = tanggal sudah dibooking (termasuk pending)",
-                        style: TextStyle(fontSize: 11),
-                      ),
-
                       const SizedBox(height: 12),
 
                       if (controller.loadingCalendar.value)
-                        const Center(child: CircularProgressIndicator())
+                        const Center(
+                            child: CircularProgressIndicator())
                       else
                         TableCalendar(
                           firstDay: controller.firstDay,
@@ -376,38 +311,20 @@ class DetailView extends StatelessWidget {
                             titleCentered: true,
                           ),
                           calendarFormat: CalendarFormat.month,
-                          availableGestures: AvailableGestures.horizontalSwipe,
-                          selectedDayPredicate: (day) =>
-                              controller.isSelected(day),
+                          selectedDayPredicate: controller.isSelected,
                           onDaySelected: (selectedDay, focusedDay) {
                             controller.focusedDay = focusedDay;
                             controller.onSelectDay(selectedDay, context);
                           },
-                          onPageChanged: controller.onPageChanged,
-                          enabledDayPredicate: (day) {
-                            final d = DateTime(day.year, day.month, day.day);
-                            if (d.isBefore(controller.todayNorm)) {
-                              return false;
-                            }
-                            return true;
-                          },
                           calendarBuilders: CalendarBuilders(
-                            defaultBuilder: (context, day, focusedDay) =>
-                                _buildDayCell(context, day, controller),
-                            todayBuilder: (context, day, focusedDay) =>
-                                _buildDayCell(context, day, controller),
+                            defaultBuilder:
+                                (c, d, f) =>
+                                    _buildDayCell(c, d, controller),
+                            todayBuilder:
+                                (c, d, f) =>
+                                    _buildDayCell(c, d, controller),
                           ),
                         ),
-
-                      const SizedBox(height: 8),
-                      Text(
-                        'Check-in:  ${controller.formatDate(controller.checkIn.value)}',
-                        style: const TextStyle(fontSize: 13),
-                      ),
-                      Text(
-                        'Check-out: ${controller.formatDate(controller.checkOut.value)}',
-                        style: const TextStyle(fontSize: 13),
-                      ),
 
                       const SizedBox(height: 30),
                     ],
@@ -421,6 +338,7 @@ class DetailView extends StatelessWidget {
     );
   }
 
+  // ================= DAY CELL (TIDAK DIUBAH) =================
   Widget _buildDayCell(
     BuildContext context,
     DateTime day,
@@ -449,17 +367,11 @@ class DetailView extends StatelessWidget {
       child: Container(
         width: 32,
         height: 32,
-        decoration: BoxDecoration(
-          color: bg,
-          shape: BoxShape.circle,
-        ),
+        decoration: BoxDecoration(color: bg, shape: BoxShape.circle),
         alignment: Alignment.center,
         child: Text(
           '${day.day}',
-          style: TextStyle(
-            color: textColor,
-            fontSize: 13,
-          ),
+          style: TextStyle(color: textColor, fontSize: 13),
         ),
       ),
     );

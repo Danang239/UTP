@@ -10,25 +10,43 @@ class ChatbotView extends GetView<ChatbotController> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colors = theme.colorScheme;
+
     return Scaffold(
-      appBar: AppBar(title: const Text('Chatbot')),
+      backgroundColor: theme.scaffoldBackgroundColor,
+
+      // ================= APP BAR =================
+      appBar: AppBar(
+        backgroundColor: theme.appBarTheme.backgroundColor,
+        foregroundColor: theme.appBarTheme.foregroundColor,
+        title: const Text('Chatbot'),
+      ),
+
       body: Column(
         children: [
-          // area chat
+          // ================= CHAT AREA =================
           Expanded(
             child: Container(
-              color: Colors.grey[100],
+              color: colors.surfaceVariant,
               child: Obx(
                 () => ListView.builder(
                   padding: const EdgeInsets.all(16),
                   itemCount: controller.messages.length,
                   itemBuilder: (context, index) {
                     final msg = controller.messages[index];
-                    final align = msg.fromBot
-                        ? Alignment.centerLeft
-                        : Alignment.centerRight;
-                    final bg = msg.fromBot ? Colors.white : Colors.black;
-                    final color = msg.fromBot ? Colors.black : Colors.white;
+
+                    final bool fromBot = msg.fromBot;
+                    final Alignment align =
+                        fromBot ? Alignment.centerLeft : Alignment.centerRight;
+
+                    final Color bubbleBg = fromBot
+                        ? colors.surface
+                        : colors.primary;
+
+                    final Color textColor = fromBot
+                        ? colors.onSurface
+                        : colors.onPrimary;
 
                     return Align(
                       alignment: align,
@@ -39,11 +57,11 @@ class ChatbotView extends GetView<ChatbotController> {
                           vertical: 8,
                         ),
                         decoration: BoxDecoration(
-                          color: bg,
+                          color: bubbleBg,
                           borderRadius: BorderRadius.circular(12),
                           boxShadow: [
                             BoxShadow(
-                              color: Colors.black.withOpacity(0.05),
+                              color: colors.shadow.withOpacity(0.15),
                               blurRadius: 4,
                               offset: const Offset(0, 2),
                             ),
@@ -51,7 +69,10 @@ class ChatbotView extends GetView<ChatbotController> {
                         ),
                         child: Text(
                           msg.text,
-                          style: TextStyle(color: color, fontSize: 14),
+                          style: TextStyle(
+                            color: textColor,
+                            fontSize: 14,
+                          ),
                         ),
                       ),
                     );
@@ -61,11 +82,11 @@ class ChatbotView extends GetView<ChatbotController> {
             ),
           ),
 
-          const Divider(height: 1),
+          Divider(height: 1, color: colors.outlineVariant),
 
-          // daftar pertanyaan di bawah
+          // ================= QUICK QUESTIONS =================
           Container(
-            color: Colors.white,
+            color: colors.surface,
             padding: const EdgeInsets.only(
               left: 16,
               right: 16,
@@ -75,22 +96,27 @@ class ChatbotView extends GetView<ChatbotController> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
+                Text(
                   'Pertanyaan yang bisa dipilih:',
-                  style: TextStyle(fontSize: 12, color: Colors.grey),
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: colors.onSurface.withOpacity(0.6),
+                  ),
                 ),
                 const SizedBox(height: 8),
+
                 StreamBuilder<QuerySnapshot>(
                   stream: controller.chatQuery.snapshots(),
                   builder: (context, snapshot) {
                     if (snapshot.hasError) {
                       return Text(
                         'Error: ${snapshot.error}',
-                        style: const TextStyle(color: Colors.red, fontSize: 12),
+                        style: theme.textTheme.bodySmall
+                            ?.copyWith(color: colors.error),
                       );
                     }
 
-                    if (snapshot.connectionState == ConnectionState.waiting) {
+                    if (snapshot.connectionState ==
+                        ConnectionState.waiting) {
                       return const SizedBox(
                         height: 36,
                         child: Center(
@@ -106,9 +132,12 @@ class ChatbotView extends GetView<ChatbotController> {
                     final docs = snapshot.data?.docs ?? [];
 
                     if (docs.isEmpty) {
-                      return const Text(
-                        'Belum ada daftar pertanyaan.\nIsi koleksi "chatbot" di Firestore.',
-                        style: TextStyle(fontSize: 12, color: Colors.grey),
+                      return Text(
+                        'Belum ada daftar pertanyaan.\n'
+                        'Isi koleksi "chatbot" di Firestore.',
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: colors.onSurface.withOpacity(0.6),
+                        ),
                       );
                     }
 
@@ -116,13 +145,12 @@ class ChatbotView extends GetView<ChatbotController> {
                       scrollDirection: Axis.horizontal,
                       child: Row(
                         children: docs.map((doc) {
-                          final data = doc.data() as Map<String, dynamic>;
-                          final question = (data['question'] ?? '')
-                              .toString()
-                              .trim();
-                          final answer = (data['answer'] ?? '')
-                              .toString()
-                              .trim();
+                          final data =
+                              doc.data() as Map<String, dynamic>;
+                          final question =
+                              (data['question'] ?? '').toString().trim();
+                          final answer =
+                              (data['answer'] ?? '').toString().trim();
 
                           if (question.isEmpty || answer.isEmpty) {
                             return const SizedBox.shrink();
@@ -132,18 +160,20 @@ class ChatbotView extends GetView<ChatbotController> {
                             padding: const EdgeInsets.only(right: 8),
                             child: OutlinedButton(
                               style: OutlinedButton.styleFrom(
-                                side: const BorderSide(color: Colors.black),
+                                side: BorderSide(color: colors.primary),
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(20),
                                 ),
                               ),
-                              onPressed: () =>
-                                  controller.sendQuestion(question, answer),
+                              onPressed: () => controller.sendQuestion(
+                                question,
+                                answer,
+                              ),
                               child: Text(
                                 question,
-                                style: const TextStyle(
+                                style: TextStyle(
                                   fontSize: 12,
-                                  color: Colors.black,
+                                  color: colors.primary,
                                 ),
                               ),
                             ),

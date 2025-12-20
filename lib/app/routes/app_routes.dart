@@ -2,9 +2,9 @@ abstract class Routes {
   Routes._();
 
   // =====================
-  // SPLASH
+  // SPLASH (ROOT)
   // =====================
-  static const splash = '/splash';
+  static const splash = '/';
 
   // =====================
   // AUTH
@@ -19,6 +19,13 @@ abstract class Routes {
   static const chatbot = '/chatbot';
   static const payment = '/payment';
   static const chatRoom = '/chat-room';
+  static const search = '/search';
+
+  // =====================
+  // CHAT USER ↔ ADMIN
+  // =====================
+  static const adminChat = '/admin-chat';
+  static const userChatAdmin = '/user-chat-admin';
 
   // =====================
   // ADMIN

@@ -4,6 +4,8 @@ import 'admin_messages_viewmodel.dart';
 class AdminMessagesBinding extends Bindings {
   @override
   void dependencies() {
-    Get.lazyPut<AdminMessagesViewModel>(() => AdminMessagesViewModel());
+    Get.lazyPut<AdminMessagesViewModel>(
+      () => AdminMessagesViewModel(),
+    );
   }
 }

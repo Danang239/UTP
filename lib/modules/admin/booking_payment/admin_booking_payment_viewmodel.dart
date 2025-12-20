@@ -114,12 +114,12 @@ class AdminBookingPaymentViewModel extends GetxController {
       final Timestamp fromTs = Timestamp.fromDate(from);
       final Timestamp toTs = Timestamp.fromDate(to);
 
-      // ✅ ambil booking sesuai periode (created_at)
+      // ✅ FIX: hindari .orderBy() biar gak minta index.
+      // Sorting kita lakukan di Dart.
       final snap = await _db
           .collection('bookings')
           .where('created_at', isGreaterThanOrEqualTo: fromTs)
           .where('created_at', isLessThan: toTs)
-          .orderBy('created_at', descending: true)
           .get();
 
       final Map<String, String> userNameCache = {};
@@ -127,6 +127,13 @@ class AdminBookingPaymentViewModel extends GetxController {
       for (final doc in snap.docs) {
         items.add(await _mapBookingDoc(doc, userNameCache));
       }
+
+      // ✅ sort by createdAt desc
+      items.sort((a, b) {
+        final da = a.createdAt ?? DateTime.fromMillisecondsSinceEpoch(0);
+        final db = b.createdAt ?? DateTime.fromMillisecondsSinceEpoch(0);
+        return db.compareTo(da);
+      });
 
       bookings.assignAll(items);
 
@@ -204,7 +211,7 @@ class AdminBookingPaymentViewModel extends GetxController {
       ownerId: ownerId,
       checkIn: _tsToDate(data['check_in']),
       checkOut: _tsToDate(data['check_out']),
-      createdAt: _tsToDate(data['created_at']), // ✅ tanggal pesan
+      createdAt: _tsToDate(data['created_at']),
       paymentMethod: paymentMethod,
       bank: bank,
       totalPrice: totalPrice,
@@ -218,7 +225,7 @@ class AdminBookingPaymentViewModel extends GetxController {
     );
   }
 
-  // ✅ hitung dari list yang sudah difilter bulan + hanya confirmed
+  // ✅ confirmed saja
   void calculateIncomeFromLoadedList() {
     int adminIncome = 0;
     int ownerIncome = 0;

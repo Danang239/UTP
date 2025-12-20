@@ -1,66 +1,45 @@
 // lib/modules/admin/pages/admin_pages.dart
 
 import 'package:get/get.dart';
-import 'package:utp_flutter/modules/admin/booking_payment/admin_booking_payment_binding.dart';
-import 'package:utp_flutter/modules/admin/booking_payment/admin_booking_payment_view.dart';
+import 'package:utp_flutter/modules/admin/admin_chat/admin_chat_binding.dart';
+import 'package:utp_flutter/modules/admin/admin_chat/admin_chat_view.dart';
+
+// =====================
+// DASHBOARD
+// =====================
 import 'package:utp_flutter/modules/admin/dashboard/admin_dashboard_view.dart';
-import 'package:utp_flutter/modules/admin/dashboard/bikin_owner/admin_data_owner_binding.dart';
-import 'package:utp_flutter/modules/admin/dashboard/bikin_owner/admin_data_owner_view.dart';
-import 'package:utp_flutter/modules/admin/dashboard/data_villa/admin_data_villa_binding.dart';
-import 'package:utp_flutter/modules/admin/dashboard/data_villa/admin_data_villa_view.dart';
+import 'package:utp_flutter/modules/admin/dashboard/admin_dashboard_binding.dart';
 
-// Dashboard admin
-import '../admin_dashboard_viewmodel.dart';
-import '../admin_dashboard_binding.dart';
+// =====================
+// CHAT (ADMIN ↔ USER)
+// =====================
+import 'package:utp_flutter/modules/user/chat_admin/user_chat_view.dart';
+import 'package:utp_flutter/modules/user/chat_admin/user_chat_binding.dart';
 
-// Data Villa (folder terpisah)
-import '../data_villa/admin_data_villa_viewmodel.dart';
-
-// Tambahan: kalau nanti mau tambahkan data user / booking / pesan
-// tinggal import aja dari folder pages lain
-
-
+// =====================
+// ROUTE NAME
+// =====================
 class AdminRoutes {
-  static const dashboard = '/admin/dashboard';
-  static const dataVilla = '/admin/data-villa';
-  // tinggal tambahin lagi:
-  // static const dataUser = '/admin/data-user';
-  // static const booking = '/admin/booking';
-  // static const pesan = '/admin/pesan';
+  static const dashboard = '/admin-dashboard';
+  static const chatRoom = '/admin-chat';
 }
 
 final List<GetPage> adminPages = [
-
-  // Dashboard Admin
+  // =====================
+  // ADMIN DASHBOARD
+  // =====================
   GetPage(
     name: AdminRoutes.dashboard,
     page: () => const AdminDashboardView(),
-    binding: DashboardBinding(),
+    binding: AdminDashboardBinding(),
   ),
 
-  // Data Villa
+  // =====================
+  // CHAT ROOM (DETAIL)
+  // =====================
   GetPage(
-    name: AdminRoutes.dataVilla,
-    page: () => const AdminDataVillaView(),
-    binding: AdminDataVillaBinding(),
+    name: AdminRoutes.chatRoom,
+    page: () => const AdminChatView(),
+    binding: AdminChatBinding(),
   ),
-  GetPage(
-    name: '/admin_data_owner',
-    page: () => AdminDataOwnerView(),
-    binding: AdminDataOwnerBinding(),  // Menghubungkan Binding
-    ),
-  GetPage(
-  name: '/admin-booking',
-  page: () => const AdminBookingPaymentView(),
-  binding: AdminBookingPaymentBinding(),
-),
-
-  // tinggal nambah page lain di sini...
 ];
-
-class DashboardBinding extends Bindings {
-  @override
-  void dependencies() {
-    // Add your dependencies here
-  }
-}

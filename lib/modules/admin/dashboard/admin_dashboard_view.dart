@@ -13,33 +13,60 @@ class AdminDashboardView extends GetView<AdminDashboardViewModel> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFF3E9FF),
+
+      // ===============================
+      // FLOATING ACTION BUTTON
+      // ===============================
       floatingActionButton: Obx(() {
-        final title = controller.currentMenuTitle;
+        final title = controller.currentMenuTitle.toLowerCase();
+
+        // ❌ TIDAK ADA FAB UNTUK MENU PESAN
+        if (title == 'pesan') {
+          return const SizedBox.shrink();
+        }
+
         return FloatingActionButton.extended(
           onPressed: () {
             Get.snackbar(
-              'Floating Action',
-              'Aksi untuk menus "$title"',
+              'Aksi',
+              'Tambah ${controller.currentMenuTitle}',
               snackPosition: SnackPosition.BOTTOM,
             );
           },
           icon: const Icon(Icons.add),
-          label: Text('Tambah ${title.toLowerCase()}'),
+          label: Text('Tambah ${controller.currentMenuTitle}'),
           backgroundColor: const Color(0xFF673AB7),
         );
       }),
+
       body: SafeArea(
         child: Row(
           children: [
-            SidebarWidget(),
+            const SidebarWidget(),
+
             Expanded(
               child: Column(
                 children: [
-                  TopBarWidget(),
-                  SizedBox(height: 16),
-                  StatsSectionWidget(),
-                  SizedBox(height: 16),
-                  Expanded(
+                  const TopBarWidget(),
+
+                  const SizedBox(height: 16),
+
+                  // ===============================
+                  // STATS (HILANGKAN DI MENU PESAN)
+                  // ===============================
+                  Obx(() {
+                    if (controller.currentMenuTitle.toLowerCase() == 'pesan') {
+                      return const SizedBox.shrink();
+                    }
+                    return const StatsSectionWidget();
+                  }),
+
+                  const SizedBox(height: 16),
+
+                  // ===============================
+                  // CONTENT AREA (INTI)
+                  // ===============================
+                  const Expanded(
                     child: ContentAreaWidget(),
                   ),
                 ],

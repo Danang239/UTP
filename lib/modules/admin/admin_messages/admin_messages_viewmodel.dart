@@ -1,55 +1,58 @@
+import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 class AdminMessagesViewModel extends GetxController {
-  final isLoading = false.obs;
-  final errorMessage = RxnString();
+  final TextEditingController messageC = TextEditingController();
 
-  // daftar chat (1 row per user)
-  final chats = <Map<String, dynamic>>[].obs;
+  final _db = FirebaseFirestore.instance;
+
+  // room yang sedang dibuka
+  final selectedUserId = ''.obs;
+  final selectedUserName = ''.obs;
+
+  // ===============================
+  //  PILIH ROOM (DARI LIST)
+  // ===============================
+  void openRoom(String userId, String userName) {
+    selectedUserId.value = userId;
+    selectedUserName.value = userName;
+    messageC.clear();
+  }
+
+  // ===============================
+  //  BALAS PESAN (ADMIN)
+  // ===============================
+  Future<void> sendReply() async {
+    final text = messageC.text.trim();
+    if (text.isEmpty) return;
+    if (selectedUserId.value.isEmpty) return;
+
+    final chatRef =
+        _db.collection('admin_chats').doc(selectedUserId.value);
+
+    final messagesRef = chatRef.collection('messages');
+
+    // kirim pesan admin
+    await messagesRef.add({
+      'sender': 'admin',
+      'text': text,
+      'createdAt': FieldValue.serverTimestamp(),
+    });
+
+    // update ringkasan chat
+    await chatRef.update({
+      'lastMessage': text,
+      'lastSender': 'admin',
+      'updatedAt': FieldValue.serverTimestamp(),
+    });
+
+    messageC.clear();
+  }
 
   @override
-  void onInit() {
-    super.onInit();
-    loadChats();
-  }
-
-  Future<void> loadChats() async {
-    try {
-      isLoading.value = true;
-      errorMessage.value = null;
-
-      final snap =
-          await FirebaseFirestore.instance.collection('chats').get();
-
-      final list = <Map<String, dynamic>>[];
-
-      for (final doc in snap.docs) {
-        final data = doc.data();
-
-        list.add({
-          'id': doc.id,
-          'userName': data['user_name'] ?? 'User',
-          'lastMessage': data['last_message'] ?? '',
-          'updatedAt': data['updated_at'], // boleh null
-        });
-      }
-
-      chats.assignAll(list);
-    } catch (e) {
-      errorMessage.value = e.toString();
-    } finally {
-      isLoading.value = false;
-    }
-  }
-
-  void openChatDetail(Map<String, dynamic> chat) {
-    // TODO: nanti sambungkan ke halaman chat detail admin
-    // misalnya Get.toNamed(Routes.adminChatDetail, arguments: chat);
-    Get.snackbar(
-      'Buka Chat',
-      'Buka chat dengan ${chat['userName']} (id: ${chat['id']})',
-      snackPosition: SnackPosition.BOTTOM,
-    );
+  void onClose() {
+    messageC.dispose();
+    super.onClose();
   }
 }

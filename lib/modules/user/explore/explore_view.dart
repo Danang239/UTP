@@ -10,28 +10,55 @@ class ExploreView extends GetView<ExploreViewModel> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
     return Scaffold(
-      appBar: AppBar(title: const Text("Explore")),
+      // 🔥 biarkan Scaffold ambil dari theme
+      backgroundColor: theme.scaffoldBackgroundColor,
+
+      appBar: AppBar(
+        title: const Text("Explore"),
+        centerTitle: true,
+        elevation: 0,
+        // 🔥 warna otomatis dari theme (light / dark)
+        backgroundColor: theme.appBarTheme.backgroundColor,
+        foregroundColor: theme.appBarTheme.foregroundColor,
+      ),
+
       body: Obx(() {
+        // ================= LOADING =================
         if (controller.isLoading.value) {
-          return const Center(child: CircularProgressIndicator());
+          return Center(
+            child: CircularProgressIndicator(
+              color: theme.colorScheme.primary,
+            ),
+          );
         }
 
+        // ================= ERROR =================
         if (controller.errorMessage.value != null) {
           return Center(
             child: Text(
               controller.errorMessage.value!,
               textAlign: TextAlign.center,
+              style: theme.textTheme.bodyMedium,
             ),
           );
         }
 
         final villas = controller.villas;
 
+        // ================= EMPTY =================
         if (villas.isEmpty) {
-          return const Center(child: Text("Belum ada villa"));
+          return Center(
+            child: Text(
+              "Belum ada villa",
+              style: theme.textTheme.bodyMedium,
+            ),
+          );
         }
 
+        // ================= GRID =================
         return GridView.builder(
           padding: const EdgeInsets.all(12),
           itemCount: villas.length,
@@ -46,7 +73,7 @@ class ExploreView extends GetView<ExploreViewModel> {
 
             return GestureDetector(
               onTap: () => controller.openDetail(villa),
-              child: const CardItem(), // ⬅️ UI kartunya tetap pakai punyamu
+              child: const CardItem(), // ⬅️ UI card TIDAK DIUBAH
             );
           },
         );

@@ -5,6 +5,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:utp_flutter/app_session.dart';
 import 'package:utp_flutter/app/routes/app_routes.dart';
 import 'package:utp_flutter/main.dart';
+import 'package:utp_flutter/modules/user/main/main_page.dart';
 
 class LoginViewModel extends GetxController {
   final FirebaseAuth _auth = FirebaseAuth.instance;

@@ -1,5 +1,4 @@
 import 'dart:async';
-
 import 'package:get/get.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:utp_flutter/app_session.dart';
@@ -13,19 +12,21 @@ class FavoriteViewModel extends GetxController {
 
   final favorites = <VillaFavorite>[].obs;
 
-  final _db = FirebaseFirestore.instance;
+  final FirebaseFirestore _db = FirebaseFirestore.instance;
   StreamSubscription<QuerySnapshot<Map<String, dynamic>>>? _favSub;
 
   String get uid {
     final id = AppSession.userDocId;
-    if (id == null) throw 'User belum login';
+    if (id == null) {
+      throw 'User belum login';
+    }
     return id;
   }
 
   @override
   void onInit() {
     super.onInit();
-    _listenFavorites(); // ⬅️ bukan load sekali, tapi listen terus
+    _listenFavorites();
   }
 
   @override
@@ -34,12 +35,16 @@ class FavoriteViewModel extends GetxController {
     super.onClose();
   }
 
-  /// Toggle Edit Mode
+  // =========================
+  // TOGGLE EDIT MODE
+  // =========================
   void toggleEditMode() {
     isEditMode.value = !isEditMode.value;
   }
 
-  /// Dengarkan perubahan favorit user secara realtime
+  // =========================
+  // LISTEN FAVORITES (REALTIME)
+  // =========================
   void _listenFavorites() {
     isLoading.value = true;
 
@@ -51,53 +56,66 @@ class FavoriteViewModel extends GetxController {
 
     _favSub = ref.snapshots().listen(
       (snap) async {
-        final List<VillaFavorite> list = [];
+        final List<VillaFavorite> result = [];
 
-        // setiap kali ada perubahan, kita rebuild list villa favorit
-        for (var doc in snap.docs) {
+        for (final doc in snap.docs) {
           final favData = doc.data();
+          final String villaId = favData['villaId'] ?? doc.id;
 
-          final villaId = favData['villaId'] ?? doc.id;
-          final villaSnap = await _db.collection('villas').doc(villaId).get();
+          final villaSnap =
+              await _db.collection('villas').doc(villaId).get();
 
-          if (villaSnap.exists) {
-            final data = villaSnap.data() as Map<String, dynamic>;
+          if (!villaSnap.exists) continue;
 
-            list.add(
-              VillaFavorite(
-                id: doc.id,
-                villaData: VillaFavoriteData(
-                  id: villaId,
-                  name: data['name'] ?? 'Tanpa Nama',
-                  location: data['location'] ?? '-',
-                ),
-              ),
-            );
+          final data = villaSnap.data() as Map<String, dynamic>;
+
+          // =========================
+          // 🔥 AMBIL FOTO VILLA (AMAN)
+          // =========================
+          String imageUrl = '';
+
+          final imageUrls = data['image_urls'];
+          final images = data['images'];
+          final singleImage = data['image_url'];
+
+          if (imageUrls is List && imageUrls.isNotEmpty) {
+            imageUrl = imageUrls.first.toString();
+          } else if (images is List && images.isNotEmpty) {
+            imageUrl = images.first.toString();
+          } else if (singleImage is String && singleImage.isNotEmpty) {
+            imageUrl = singleImage;
           }
+
+          result.add(
+            VillaFavorite(
+              id: doc.id,
+              villaData: VillaFavoriteData(
+                id: villaId,
+                name: (data['name'] ?? 'Tanpa Nama').toString(),
+                location: (data['location'] ?? '-').toString(),
+                imageUrl: imageUrl,
+              ),
+            ),
+          );
         }
 
-        favorites.assignAll(list);
+        favorites.assignAll(result);
         isLoading.value = false;
       },
-      onError: (e) {
+      onError: (error) {
         isLoading.value = false;
         Get.snackbar(
           'Error',
-          'Gagal memuat data favorit: $e',
+          'Gagal memuat data favorit',
           snackPosition: SnackPosition.BOTTOM,
         );
       },
     );
   }
 
-  /// (Opsional) manual refresh kalau mau dipanggil dari luar
-  Future<void> loadFavorites() async {
-    // sekarang cukup panggil _listenFavorites lagi
-    await _favSub?.cancel();
-    _listenFavorites();
-  }
-
-  /// Remove favorit
+  // =========================
+  // REMOVE FAVORITE
+  // =========================
   Future<void> removeFavorite(String id) async {
     await _db
         .collection('users')
@@ -105,11 +123,11 @@ class FavoriteViewModel extends GetxController {
         .collection('favorites')
         .doc(id)
         .delete();
-    // tidak perlu panggil loadFavorites();
-    // listener snapshots() akan otomatis terpanggil
   }
 
-  /// Buka detail page (panggil DetailView dengan data lengkap villa)
+  // =========================
+  // GO TO DETAIL
+  // =========================
   Future<void> goToDetail(VillaFavorite fav) async {
     try {
       final snap =
@@ -124,18 +142,16 @@ class FavoriteViewModel extends GetxController {
         return;
       }
 
-      final data = snap.data() as Map<String, dynamic>;
-
       Get.to(
         () => DetailView(
           villaId: fav.villaData.id,
-          villaData: data,
+          villaData: snap.data()!,
         ),
       );
     } catch (e) {
       Get.snackbar(
         'Error',
-        'Gagal membuka detail villa: $e',
+        'Gagal membuka detail villa',
         snackPosition: SnackPosition.BOTTOM,
       );
     }

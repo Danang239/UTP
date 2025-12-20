@@ -13,15 +13,14 @@ import 'app_session.dart';
 import 'modules/auth/login_binding.dart';
 import 'modules/auth/register_binding.dart';
 
-// USER
-import 'modules/user/favorite/favorite_view.dart';
+// USER BINDINGS
 import 'modules/user/home/home_binding.dart';
 import 'modules/user/favorite/favorite_binding.dart';
-import 'modules/user/home/home_view.dart';
 import 'modules/user/pesan/pesan_binding.dart';
-import 'modules/user/pesan/pesan_view.dart';
 import 'modules/user/profile/profile_binding.dart';
-import 'modules/user/profile/profile_view.dart';
+
+// THEME
+import 'app/theme/theme_controller.dart';
 
 // ============================================================
 // ========================== MAIN =============================
@@ -29,25 +28,36 @@ import 'modules/user/profile/profile_view.dart';
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Supabase (tidak dihapus)
+  // =====================
+  // SUPABASE
+  // =====================
   await Supabase.initialize(
     url: 'https://avztxkkbefvxfftvodui.supabase.co',
     anonKey:
-        'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF2enR4a2tiZWZ2eGZmdHZvZHVpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQzOTMzMjUsImV4cCI6MjA3OTk2OTMyNX0.liN7spnWnbKUXsKPS6IgbN5z09AR0gD61bwpLoi5aTE',
+        'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF2enR4a2tiZWZmdHZvZHVpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQzOTMzMjUsImV4cCI6MjA3OTk2OTMyNX0.liN7spnWnbKUXsKPS6IgbN5z09AR0gD61bwpLoi5aTE',
   );
 
-  // Firebase
+  // =====================
+  // FIREBASE
+  // =====================
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
 
-  // GLOBAL BINDINGS (aman)
+  // =====================
+  // GLOBAL BINDINGS
+  // =====================
   LoginBinding().dependencies();
   RegisterBinding().dependencies();
   HomeBinding().dependencies();
   FavoriteBinding().dependencies();
   PesanBinding().dependencies();
   ProfileBinding().dependencies();
+
+  // =====================
+  // THEME CONTROLLER (GLOBAL)
+  // =====================
+  Get.put(ThemeController(), permanent: true);
 
   runApp(const MyApp());
 }
@@ -60,124 +70,27 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GetMaterialApp(
-      title: 'Stay&Co',
-      debugShowCheckedModeBanner: false,
-      initialRoute: Routes.splash, // 🔥 PENTING
-      getPages: AppPages.routes,
-    );
-  }
-}
+    final ThemeController themeC = Get.find<ThemeController>();
 
-// ============================================================
-// ======================= SPLASH ==============================
-// ============================================================
-class SplashView extends StatefulWidget {
-  const SplashView({super.key});
+    return Obx(
+      () => GetMaterialApp(
+        title: 'Stay&Co',
+        debugShowCheckedModeBanner: false,
 
-  @override
-  State<SplashView> createState() => _SplashViewState();
-}
+        // =====================
+        // ROUTING
+        // =====================
+        initialRoute: Routes.splash,
+        getPages: AppPages.routes,
 
-class _SplashViewState extends State<SplashView> {
-  @override
-  void initState() {
-    super.initState();
-    _bootstrap();
-  }
+        // =====================
+        // THEME (🔥 FIX UTAMA)
+        // =====================
+        theme: themeC.lightTheme,
+        darkTheme: themeC.darkTheme,
+        themeMode:
+            themeC.isDark ? ThemeMode.dark : ThemeMode.light, // ✅ FIX
 
-  Future<void> _bootstrap() async {
-    // load session dari SharedPreferences
-    final loggedIn = await AppSession.loadSession();
-
-    if (!loggedIn) {
-      Get.offAllNamed(Routes.login);
-      return;
-    }
-
-    switch (AppSession.role) {
-      case 'admin':
-        Get.offAllNamed(Routes.adminDashboard);
-        break;
-      case 'owner':
-        Get.offAllNamed(Routes.ownerDashboard);
-        break;
-      default:
-        Get.offAllNamed(Routes.home);
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return const Scaffold(
-      body: Center(
-        child: CircularProgressIndicator(),
-      ),
-    );
-  }
-}
-
-// ============================================================
-// ======================= MAIN PAGE ===========================
-// ============================================================
-class MainPage extends StatefulWidget {
-  const MainPage({super.key});
-
-  @override
-  State<MainPage> createState() => _MainPageState();
-}
-
-class _MainPageState extends State<MainPage> {
-  int _selectedIndex = 0;
-
-  late final List<Widget> pages;
-
-  @override
-  void initState() {
-    super.initState();
-
-    pages = [
-      const HomeView(),
-      const FavoriteView(),
-      const PesanView(),
-      ProfileView(
-        onTapFavorite: () {
-          setState(() {
-            _selectedIndex = 1;
-          });
-        },
-      ),
-    ];
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      body: pages[_selectedIndex],
-      bottomNavigationBar: BottomNavigationBar(
-        currentIndex: _selectedIndex,
-        onTap: (i) => setState(() => _selectedIndex = i),
-        type: BottomNavigationBarType.fixed,
-        selectedItemColor: Colors.black,
-        unselectedItemColor: Colors.grey,
-        items: const [
-          BottomNavigationBarItem(
-            icon: Icon(Icons.search),
-            label: "Home",
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.favorite_border),
-            label: "Favorit",
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.chat_bubble_outline),
-            label: "Pesan",
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.person_outline),
-            label: "Profil",
-          ),
-        ],
       ),
     );
   }

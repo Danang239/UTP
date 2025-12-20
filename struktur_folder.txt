@@ -1,0 +1,562 @@
+Folder PATH listing for volume Windows-SSD
+Volume serial number is 9CC5-C799
+C:.
+¦   .flutter-plugins-dependencies
+¦   .gitignore
+¦   .metadata
+¦   analysis_options.yaml
+¦   firebase.json
+¦   lib.zip
+¦   pubspec.lock
+¦   pubspec.yaml
+¦   README.md
+¦   struktur_folder.txt
+¦   
++---.dart_tool
+¦   ¦   package_config.json
+¦   ¦   package_graph.json
+¦   ¦   version
+¦   ¦   
+¦   +---dartpad
+¦   ¦       web_plugin_registrant.dart
+¦   ¦       
+¦   +---extension_discovery
+¦           vs_code.json
+¦           
++---android
+¦   ¦   .gitignore
+¦   ¦   build.gradle.kts
+¦   ¦   gradle.properties
+¦   ¦   local.properties
+¦   ¦   settings.gradle.kts
+¦   ¦   
+¦   +---app
+¦   ¦   ¦   build.gradle.kts
+¦   ¦   ¦   google-services.json
+¦   ¦   ¦   
+¦   ¦   +---src
+¦   ¦       +---debug
+¦   ¦       ¦       AndroidManifest.xml
+¦   ¦       ¦       
+¦   ¦       +---main
+¦   ¦       ¦   ¦   AndroidManifest.xml
+¦   ¦       ¦   ¦   
+¦   ¦       ¦   +---java
+¦   ¦       ¦   ¦   +---io
+¦   ¦       ¦   ¦       +---flutter
+¦   ¦       ¦   ¦           +---plugins
+¦   ¦       ¦   ¦                   GeneratedPluginRegistrant.java
+¦   ¦       ¦   ¦                   
+¦   ¦       ¦   +---kotlin
+¦   ¦       ¦   ¦   +---com
+¦   ¦       ¦   ¦       +---example
+¦   ¦       ¦   ¦           +---utp_flutter
+¦   ¦       ¦   ¦                   MainActivity.kt
+¦   ¦       ¦   ¦                   
+¦   ¦       ¦   +---res
+¦   ¦       ¦       +---drawable
+¦   ¦       ¦       ¦       launch_background.xml
+¦   ¦       ¦       ¦       
+¦   ¦       ¦       +---drawable-v21
+¦   ¦       ¦       ¦       launch_background.xml
+¦   ¦       ¦       ¦       
+¦   ¦       ¦       +---mipmap-hdpi
+¦   ¦       ¦       ¦       ic_launcher.png
+¦   ¦       ¦       ¦       
+¦   ¦       ¦       +---mipmap-mdpi
+¦   ¦       ¦       ¦       ic_launcher.png
+¦   ¦       ¦       ¦       
+¦   ¦       ¦       +---mipmap-xhdpi
+¦   ¦       ¦       ¦       ic_launcher.png
+¦   ¦       ¦       ¦       
+¦   ¦       ¦       +---mipmap-xxhdpi
+¦   ¦       ¦       ¦       ic_launcher.png
+¦   ¦       ¦       ¦       
+¦   ¦       ¦       +---mipmap-xxxhdpi
+¦   ¦       ¦       ¦       ic_launcher.png
+¦   ¦       ¦       ¦       
+¦   ¦       ¦       +---values
+¦   ¦       ¦       ¦       styles.xml
+¦   ¦       ¦       ¦       
+¦   ¦       ¦       +---values-night
+¦   ¦       ¦               styles.xml
+¦   ¦       ¦               
+¦   ¦       +---profile
+¦   ¦               AndroidManifest.xml
+¦   ¦               
+¦   +---gradle
+¦       +---wrapper
+¦               gradle-wrapper.properties
+¦               
++---assets
+¦   ¦   logo_stayco.png
+¦   ¦   qris_example.png
+¦   ¦   
+¦   +---images
+¦           logo_stayco.png
+¦           
++---build
+¦   ¦   .last_build_id
+¦   ¦   be00bfc6c648760d34c439e0f7c20a54.cache.dill.track.dill
+¦   ¦   
+¦   +---8e17e0fac3c91b3efb9da05996d212d9
+¦   ¦       .filecache
+¦   ¦       dart_build.d
+¦   ¦       dart_build.stamp
+¦   ¦       dart_build_result.json
+¦   ¦       gen_dart_plugin_registrant.stamp
+¦   ¦       gen_localizations.stamp
+¦   ¦       outputs.json
+¦   ¦       _composite.stamp
+¦   ¦       
+¦   +---flutter_assets
+¦   ¦   ¦   AssetManifest.bin
+¦   ¦   ¦   AssetManifest.bin.json
+¦   ¦   ¦   FontManifest.json
+¦   ¦   ¦   NOTICES
+¦   ¦   ¦   
+¦   ¦   +---assets
+¦   ¦   ¦   ¦   qris_example.png
+¦   ¦   ¦   ¦   
+¦   ¦   ¦   +---images
+¦   ¦   ¦           logo_stayco.png
+¦   ¦   ¦           
+¦   ¦   +---fonts
+¦   ¦   ¦       MaterialIcons-Regular.otf
+¦   ¦   ¦       
+¦   ¦   +---packages
+¦   ¦   ¦   +---cupertino_icons
+¦   ¦   ¦       +---assets
+¦   ¦   ¦               CupertinoIcons.ttf
+¦   ¦   ¦               
+¦   ¦   +---shaders
+¦   ¦           ink_sparkle.frag
+¦   ¦           stretch_effect.frag
+¦   ¦           
+¦   +---native_assets
+¦       +---web
++---ios
+¦   ¦   .gitignore
+¦   ¦   
+¦   +---Flutter
+¦   ¦   ¦   AppFrameworkInfo.plist
+¦   ¦   ¦   Debug.xcconfig
+¦   ¦   ¦   flutter_export_environment.sh
+¦   ¦   ¦   Generated.xcconfig
+¦   ¦   ¦   Release.xcconfig
+¦   ¦   ¦   
+¦   ¦   +---ephemeral
+¦   ¦           flutter_lldbinit
+¦   ¦           flutter_lldb_helper.py
+¦   ¦           
+¦   +---Runner
+¦   ¦   ¦   AppDelegate.swift
+¦   ¦   ¦   GeneratedPluginRegistrant.h
+¦   ¦   ¦   GeneratedPluginRegistrant.m
+¦   ¦   ¦   Info.plist
+¦   ¦   ¦   Runner-Bridging-Header.h
+¦   ¦   ¦   
+¦   ¦   +---Assets.xcassets
+¦   ¦   ¦   +---AppIcon.appiconset
+¦   ¦   ¦   ¦       Contents.json
+¦   ¦   ¦   ¦       Icon-App-1024x1024@1x.png
+¦   ¦   ¦   ¦       Icon-App-20x20@1x.png
+¦   ¦   ¦   ¦       Icon-App-20x20@2x.png
+¦   ¦   ¦   ¦       Icon-App-20x20@3x.png
+¦   ¦   ¦   ¦       Icon-App-29x29@1x.png
+¦   ¦   ¦   ¦       Icon-App-29x29@2x.png
+¦   ¦   ¦   ¦       Icon-App-29x29@3x.png
+¦   ¦   ¦   ¦       Icon-App-40x40@1x.png
+¦   ¦   ¦   ¦       Icon-App-40x40@2x.png
+¦   ¦   ¦   ¦       Icon-App-40x40@3x.png
+¦   ¦   ¦   ¦       Icon-App-60x60@2x.png
+¦   ¦   ¦   ¦       Icon-App-60x60@3x.png
+¦   ¦   ¦   ¦       Icon-App-76x76@1x.png
+¦   ¦   ¦   ¦       Icon-App-76x76@2x.png
+¦   ¦   ¦   ¦       Icon-App-83.5x83.5@2x.png
+¦   ¦   ¦   ¦       
+¦   ¦   ¦   +---LaunchImage.imageset
+¦   ¦   ¦           Contents.json
+¦   ¦   ¦           LaunchImage.png
+¦   ¦   ¦           LaunchImage@2x.png
+¦   ¦   ¦           LaunchImage@3x.png
+¦   ¦   ¦           README.md
+¦   ¦   ¦           
+¦   ¦   +---Base.lproj
+¦   ¦           LaunchScreen.storyboard
+¦   ¦           Main.storyboard
+¦   ¦           
+¦   +---Runner.xcodeproj
+¦   ¦   ¦   project.pbxproj
+¦   ¦   ¦   
+¦   ¦   +---project.xcworkspace
+¦   ¦   ¦   ¦   contents.xcworkspacedata
+¦   ¦   ¦   ¦   
+¦   ¦   ¦   +---xcshareddata
+¦   ¦   ¦           IDEWorkspaceChecks.plist
+¦   ¦   ¦           WorkspaceSettings.xcsettings
+¦   ¦   ¦           
+¦   ¦   +---xcshareddata
+¦   ¦       +---xcschemes
+¦   ¦               Runner.xcscheme
+¦   ¦               
+¦   +---Runner.xcworkspace
+¦   ¦   ¦   contents.xcworkspacedata
+¦   ¦   ¦   
+¦   ¦   +---xcshareddata
+¦   ¦           IDEWorkspaceChecks.plist
+¦   ¦           WorkspaceSettings.xcsettings
+¦   ¦           
+¦   +---RunnerTests
+¦           RunnerTests.swift
+¦           
++---lib
+¦   ¦   app_session.dart
+¦   ¦   firebase_options.dart
+¦   ¦   main.dart
+¦   ¦   supabase_client.dart
+¦   ¦   
+¦   +---app
+¦   ¦   +---routes
+¦   ¦           app_pages.dart
+¦   ¦           app_routes.dart
+¦   ¦           
+¦   +---data
+¦   ¦   +---models
+¦   ¦   ¦       villa_favorite_model.dart
+¦   ¦   ¦       villa_model.dart
+¦   ¦   ¦       
+¦   ¦   +---repositories
+¦   ¦   ¦       auth_repository.dart
+¦   ¦   ¦       chat_repository.dart
+¦   ¦   ¦       favorite_repository.dart
+¦   ¦   ¦       user_repository.dart
+¦   ¦   ¦       villa_repository.dart
+¦   ¦   ¦       
+¦   ¦   +---services
+¦   ¦           auth_service.dart
+¦   ¦           chat_service.dart
+¦   ¦           favorite_service.dart
+¦   ¦           user_service.dart
+¦   ¦           villa_service.dart
+¦   ¦           
+¦   +---modules
+¦   ¦   +---admin
+¦   ¦   ¦   ¦   admin_periode_controller.dart
+¦   ¦   ¦   ¦   
+¦   ¦   ¦   +---admin_messages
+¦   ¦   ¦   ¦       admin_messages_binding.dart
+¦   ¦   ¦   ¦       admin_messages_view.dart
+¦   ¦   ¦   ¦       admin_messages_viewmodel.dart
+¦   ¦   ¦   ¦       
+¦   ¦   ¦   +---booking_payment
+¦   ¦   ¦   ¦   ¦   admin_booking_payment_binding.dart
+¦   ¦   ¦   ¦   ¦   admin_booking_payment_view.dart
+¦   ¦   ¦   ¦   ¦   admin_booking_payment_viewmodel.dart
+¦   ¦   ¦   ¦   ¦   
+¦   ¦   ¦   ¦   +---detail_booking
+¦   ¦   ¦   ¦   ¦       admin_booking_detail_view.dart
+¦   ¦   ¦   ¦   ¦       admin_booking_detail_viewmodel.dart
+¦   ¦   ¦   ¦   ¦       
+¦   ¦   ¦   ¦   +---widgets
+¦   ¦   ¦   ¦           booking_action_buttons.dart
+¦   ¦   ¦   ¦           booking_proof_dialog.dart
+¦   ¦   ¦   ¦           booking_status_badge.dart
+¦   ¦   ¦   ¦           booking_table.dart
+¦   ¦   ¦   ¦           
+¦   ¦   ¦   +---dashboard
+¦   ¦   ¦       ¦   admin_dashboard_binding.dart
+¦   ¦   ¦       ¦   admin_dashboard_view.dart
+¦   ¦   ¦       ¦   admin_dashboard_viewmodel.dart
+¦   ¦   ¦       ¦   
+¦   ¦   ¦       +---bikin_owner
+¦   ¦   ¦       ¦   ¦   admin_data_owner_binding.dart
+¦   ¦   ¦       ¦   ¦   admin_data_owner_view.dart
+¦   ¦   ¦       ¦   ¦   admin_data_owner_viewmodel.dart
+¦   ¦   ¦       ¦   ¦   admin_owner_item.dart
+¦   ¦   ¦       ¦   ¦   
+¦   ¦   ¦       ¦   +---detail_owner
+¦   ¦   ¦       ¦   ¦       admin_owner_detail_binding.dart
+¦   ¦   ¦       ¦   ¦       admin_owner_detail_view.dart
+¦   ¦   ¦       ¦   ¦       admin_owner_detail_viewmodel.dart
+¦   ¦   ¦       ¦   ¦       
+¦   ¦   ¦       ¦   +---edit_owner
+¦   ¦   ¦       ¦           admin_owner_edit_binding.dart
+¦   ¦   ¦       ¦           admin_owner_edit_view.dart
+¦   ¦   ¦       ¦           
+¦   ¦   ¦       +---data_user
+¦   ¦   ¦       ¦   ¦   admin_data_user_binding.dart
+¦   ¦   ¦       ¦   ¦   admin_data_user_view.dart
+¦   ¦   ¦       ¦   ¦   admin_data_user_viewmodel.dart
+¦   ¦   ¦       ¦   ¦   
+¦   ¦   ¦       ¦   +---detail_user
+¦   ¦   ¦       ¦   ¦       admin_user_detail_binding.dart
+¦   ¦   ¦       ¦   ¦       admin_user_detail_view.dart
+¦   ¦   ¦       ¦   ¦       admin_user_detail_viewmodel.dart
+¦   ¦   ¦       ¦   ¦       
+¦   ¦   ¦       ¦   +---widgets
+¦   ¦   ¦       ¦           user_action_buttons.dart
+¦   ¦   ¦       ¦           user_status_cell.dart
+¦   ¦   ¦       ¦           user_table.dart
+¦   ¦   ¦       ¦           
+¦   ¦   ¦       +---data_villa
+¦   ¦   ¦       ¦   ¦   admin_data_villa_binding.dart
+¦   ¦   ¦       ¦   ¦   admin_data_villa_view.dart
+¦   ¦   ¦       ¦   ¦   admin_data_villa_viewmodel.dart
+¦   ¦   ¦       ¦   ¦   
+¦   ¦   ¦       ¦   +---edit_villa
+¦   ¦   ¦       ¦           admin_edit_villa_binding.dart
+¦   ¦   ¦       ¦           admin_edit_villa_view.dart
+¦   ¦   ¦       ¦           admin_edit_villa_viewmodel.dart
+¦   ¦   ¦       ¦           
+¦   ¦   ¦       +---pages
+¦   ¦   ¦       ¦       admin_pages.dart
+¦   ¦   ¦       ¦       bikin_owner_page.dart
+¦   ¦   ¦       ¦       booking_page.dart
+¦   ¦   ¦       ¦       dashboard_page.dart
+¦   ¦   ¦       ¦       data_user_page.dart
+¦   ¦   ¦       ¦       data_villa_page.dart
+¦   ¦   ¦       ¦       pesan_page.dart
+¦   ¦   ¦       ¦       
+¦   ¦   ¦       +---utils
+¦   ¦   ¦       ¦       format_helper.dart
+¦   ¦   ¦       ¦       
+¦   ¦   ¦       +---widgets
+¦   ¦   ¦               content_area_widget.dart
+¦   ¦   ¦               sidebar_widget.dart
+¦   ¦   ¦               stats_section_widget.dart
+¦   ¦   ¦               stat_card_widget.dart
+¦   ¦   ¦               top_bar_widget.dart
+¦   ¦   ¦               
+¦   ¦   +---auth
+¦   ¦   ¦   ¦   login_binding.dart
+¦   ¦   ¦   ¦   login_view.dart
+¦   ¦   ¦   ¦   login_viewmodel.dart
+¦   ¦   ¦   ¦   register_binding.dart
+¦   ¦   ¦   ¦   register_view.dart
+¦   ¦   ¦   ¦   register_viewmodel.dart
+¦   ¦   ¦   ¦   
+¦   ¦   ¦   +---otp
+¦   ¦   ¦           otp_binding.dart
+¦   ¦   ¦           otp_view.dart
+¦   ¦   ¦           otp_viewmodel.dart
+¦   ¦   ¦           
+¦   ¦   +---owner
+¦   ¦   ¦   ¦   owner_dashboard_binding.dart
+¦   ¦   ¦   ¦   owner_dashboard_view.dart
+¦   ¦   ¦   ¦   owner_dashboard_viewmodel.dart
+¦   ¦   ¦   ¦   
+¦   ¦   ¦   +---bookings
+¦   ¦   ¦   ¦       owner_bookings_binding.dart
+¦   ¦   ¦   ¦       owner_bookings_view.dart
+¦   ¦   ¦   ¦       owner_bookings_viewmodel.dart
+¦   ¦   ¦   ¦       
+¦   ¦   ¦   +---dashboard
+¦   ¦   ¦   ¦       dashboard_view.dart
+¦   ¦   ¦   ¦       dashboard_viewmodel.dart
+¦   ¦   ¦   ¦       
+¦   ¦   ¦   +---pesan
+¦   ¦   ¦   ¦       pesan_view.dart
+¦   ¦   ¦   ¦       pesan_viewmodel.dart
+¦   ¦   ¦   ¦       
+¦   ¦   ¦   +---profile
+¦   ¦   ¦   ¦       owner_edit_profile_view.dart
+¦   ¦   ¦   ¦       profile_binding.dart
+¦   ¦   ¦   ¦       profile_view.dart
+¦   ¦   ¦   ¦       profile_viewmodel.dart
+¦   ¦   ¦   ¦       
+¦   ¦   ¦   +---villa
+¦   ¦   ¦           villa_view.dart
+¦   ¦   ¦           villa_viewmodel.dart
+¦   ¦   ¦           
+¦   ¦   +---splash
+¦   ¦   ¦       splash_binding.dart
+¦   ¦   ¦       splash_view.dart
+¦   ¦   ¦       
+¦   ¦   +---user
+¦   ¦       +---chatbot
+¦   ¦       ¦       chatbot_binding.dart
+¦   ¦       ¦       chatbot_controller.dart
+¦   ¦       ¦       chatbot_view.dart
+¦   ¦       ¦       chat_message_model.dart
+¦   ¦       ¦       
+¦   ¦       +---chat_room
+¦   ¦       ¦       chat_room_binding.dart
+¦   ¦       ¦       chat_room_view.dart
+¦   ¦       ¦       chat_room_viewmodel.dart
+¦   ¦       ¦       
+¦   ¦       +---detail
+¦   ¦       ¦       detail_binding.dart
+¦   ¦       ¦       detail_view.dart
+¦   ¦       ¦       detail_viewmodel.dart
+¦   ¦       ¦       
+¦   ¦       +---edit_profile
+¦   ¦       ¦       edit_profile_binding.dart
+¦   ¦       ¦       edit_profile_repository.dart
+¦   ¦       ¦       edit_profile_view.dart
+¦   ¦       ¦       edit_profile_viewmodel.dart
+¦   ¦       ¦       
+¦   ¦       +---explore
+¦   ¦       ¦       explore_binding.dart
+¦   ¦       ¦       explore_view.dart
+¦   ¦       ¦       explore_viewmodel.dart
+¦   ¦       ¦       
+¦   ¦       +---favorite
+¦   ¦       ¦       favorite_binding.dart
+¦   ¦       ¦       favorite_view.dart
+¦   ¦       ¦       favorite_viewmodel.dart
+¦   ¦       ¦       
+¦   ¦       +---home
+¦   ¦       ¦       home_binding.dart
+¦   ¦       ¦       home_view.dart
+¦   ¦       ¦       home_viewmodel.dart
+¦   ¦       ¦       
+¦   ¦       +---my_bookings
+¦   ¦       ¦       my_bookings_binding.dart
+¦   ¦       ¦       my_bookings_view.dart
+¦   ¦       ¦       my_bookings_viewmodel.dart
+¦   ¦       ¦       
+¦   ¦       +---payment
+¦   ¦       ¦       payment_binding.dart
+¦   ¦       ¦       payment_controller.dart
+¦   ¦       ¦       payment_view.dart
+¦   ¦       ¦       
+¦   ¦       +---pesan
+¦   ¦       ¦       pesan_binding.dart
+¦   ¦       ¦       pesan_view.dart
+¦   ¦       ¦       pesan_viewmodel.dart
+¦   ¦       ¦       
+¦   ¦       +---profile
+¦   ¦       ¦       profile_binding.dart
+¦   ¦       ¦       profile_view.dart
+¦   ¦       ¦       profile_viewmodel.dart
+¦   ¦       ¦       
+¦   ¦       +---search
+¦   ¦               search_binding.dart
+¦   ¦               search_view.dart
+¦   ¦               search_viewmodel.dart
+¦   ¦               
+¦   +---services
+¦   ¦       storage_service.dart
+¦   ¦       user_collections.dart
+¦   ¦       
+¦   +---widgets
+¦           card_item.dart
+¦           
++---linux
+¦   ¦   .gitignore
+¦   ¦   CMakeLists.txt
+¦   ¦   
+¦   +---flutter
+¦   ¦       CMakeLists.txt
+¦   ¦       generated_plugins.cmake
+¦   ¦       generated_plugin_registrant.cc
+¦   ¦       generated_plugin_registrant.h
+¦   ¦       
+¦   +---runner
+¦           CMakeLists.txt
+¦           main.cc
+¦           my_application.cc
+¦           my_application.h
+¦           
++---macos
+¦   ¦   .gitignore
+¦   ¦   
+¦   +---Flutter
+¦   ¦   ¦   Flutter-Debug.xcconfig
+¦   ¦   ¦   Flutter-Release.xcconfig
+¦   ¦   ¦   GeneratedPluginRegistrant.swift
+¦   ¦   ¦   
+¦   ¦   +---ephemeral
+¦   ¦           Flutter-Generated.xcconfig
+¦   ¦           flutter_export_environment.sh
+¦   ¦           
+¦   +---Runner
+¦   ¦   ¦   AppDelegate.swift
+¦   ¦   ¦   DebugProfile.entitlements
+¦   ¦   ¦   Info.plist
+¦   ¦   ¦   MainFlutterWindow.swift
+¦   ¦   ¦   Release.entitlements
+¦   ¦   ¦   
+¦   ¦   +---Assets.xcassets
+¦   ¦   ¦   +---AppIcon.appiconset
+¦   ¦   ¦           app_icon_1024.png
+¦   ¦   ¦           app_icon_128.png
+¦   ¦   ¦           app_icon_16.png
+¦   ¦   ¦           app_icon_256.png
+¦   ¦   ¦           app_icon_32.png
+¦   ¦   ¦           app_icon_512.png
+¦   ¦   ¦           app_icon_64.png
+¦   ¦   ¦           Contents.json
+¦   ¦   ¦           
+¦   ¦   +---Base.lproj
+¦   ¦   ¦       MainMenu.xib
+¦   ¦   ¦       
+¦   ¦   +---Configs
+¦   ¦           AppInfo.xcconfig
+¦   ¦           Debug.xcconfig
+¦   ¦           Release.xcconfig
+¦   ¦           Warnings.xcconfig
+¦   ¦           
+¦   +---Runner.xcodeproj
+¦   ¦   ¦   project.pbxproj
+¦   ¦   ¦   
+¦   ¦   +---project.xcworkspace
+¦   ¦   ¦   +---xcshareddata
+¦   ¦   ¦           IDEWorkspaceChecks.plist
+¦   ¦   ¦           
+¦   ¦   +---xcshareddata
+¦   ¦       +---xcschemes
+¦   ¦               Runner.xcscheme
+¦   ¦               
+¦   +---Runner.xcworkspace
+¦   ¦   ¦   contents.xcworkspacedata
+¦   ¦   ¦   
+¦   ¦   +---xcshareddata
+¦   ¦           IDEWorkspaceChecks.plist
+¦   ¦           
+¦   +---RunnerTests
+¦           RunnerTests.swift
+¦           
++---test
+¦       widget_test.dart
+¦       
++---web
+¦   ¦   favicon.png
+¦   ¦   index.html
+¦   ¦   manifest.json
+¦   ¦   
+¦   +---icons
+¦           Icon-192.png
+¦           Icon-512.png
+¦           Icon-maskable-192.png
+¦           Icon-maskable-512.png
+¦           
++---windows
+    ¦   .gitignore
+    ¦   CMakeLists.txt
+    ¦   
+    +---flutter
+    ¦   ¦   CMakeLists.txt
+    ¦   ¦   generated_plugins.cmake
+    ¦   ¦   generated_plugin_registrant.cc
+    ¦   ¦   generated_plugin_registrant.h
+    ¦   ¦   
+    ¦   +---ephemeral
+    ¦       +---.plugin_symlinks
+    +---runner
+        ¦   CMakeLists.txt
+        ¦   flutter_window.cpp
+        ¦   flutter_window.h
+        ¦   main.cpp
+        ¦   resource.h
+        ¦   runner.exe.manifest
+        ¦   Runner.rc
+        ¦   utils.cpp
+        ¦   utils.h
+        ¦   win32_window.cpp
+        ¦   win32_window.h
+        ¦   
+        +---resources
+                app_icon.ico
+                

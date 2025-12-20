@@ -4,30 +4,52 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 class EditProfileRepository {
   final _db = FirebaseFirestore.instance;
+  final _supabase = Supabase.instance.client;
 
-  /// Upload foto ke Supabase
-  Future<String?> uploadProfileImage(String userId, Uint8List bytes) async {
-    final storage = Supabase.instance.client.storage;
+  // ==========================
+  // UPLOAD FOTO KE SUPABASE
+  // ==========================
+  Future<String?> uploadProfileImage({
+    required String userId,
+    required Uint8List bytes,
+  }) async {
+    try {
+      final path = 'profile_images/$userId.jpg';
 
-    final path = "profile_images/$userId.jpg";
+      await _supabase.storage.from('profile').uploadBinary(
+            path,
+            bytes,
+            fileOptions: const FileOptions(
+              upsert: true,
+              contentType: 'image/jpeg',
+            ),
+          );
 
-    await storage.from('profile').uploadBinary(
-          path,
-          bytes,
-          fileOptions: const FileOptions(
-            upsert: true,
-            contentType: "image/jpeg",
-          ),
-        );
+      // Ambil public URL
+      final baseUrl =
+          _supabase.storage.from('profile').getPublicUrl(path);
 
-    return storage.from('profile').getPublicUrl(path);
+      // Cache busting supaya foto langsung update
+      final publicUrl =
+          '$baseUrl?t=${DateTime.now().millisecondsSinceEpoch}';
+
+      return publicUrl;
+    } catch (e) {
+      throw Exception('Upload foto gagal: $e');
+    }
   }
 
-  /// Update Firestore
+  // ==========================
+  // UPDATE USER FIRESTORE
+  // ==========================
   Future<void> updateUserProfile({
     required String userId,
     required Map<String, dynamic> data,
   }) async {
-    await _db.collection('users').doc(userId).update(data);
+    try {
+      await _db.collection('users').doc(userId).update(data);
+    } catch (e) {
+      throw Exception('Update profil gagal: $e');
+    }
   }
 }

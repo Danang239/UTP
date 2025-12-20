@@ -1,4 +1,3 @@
-// lib/modules/pesan/pesan_view.dart
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -10,7 +9,10 @@ class PesanView extends GetView<PesanViewModel> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
     return Scaffold(
+      backgroundColor: theme.scaffoldBackgroundColor,
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.all(16),
@@ -22,23 +24,23 @@ class PesanView extends GetView<PesanViewModel> {
               children: [
                 const SizedBox(height: 10),
 
-                // FILTER BUTTON (UI sama)
-                Row(
-                  children: [
-                    _filterButton("Semua", selected: true),
-                    const SizedBox(width: 8),
-                    _filterButton("Belum dibaca"),
-                    const SizedBox(width: 8),
-                    _filterButton("Selesai"),
-                  ],
+                // ===== JUDUL =====
+                Text(
+                  'Pesan',
+                  style: theme.textTheme.titleLarge?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
 
-                const SizedBox(height: 25),
+                const SizedBox(height: 20),
 
                 Expanded(
                   child: userId == null
-                      ? const Center(
-                          child: Text('Silakan login untuk melihat pesan'),
+                      ? Center(
+                          child: Text(
+                            'Silakan login untuk melihat pesan',
+                            style: theme.textTheme.bodyMedium,
+                          ),
                         )
                       : StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
                           stream: controller.chatsStream,
@@ -53,23 +55,29 @@ class PesanView extends GetView<PesanViewModel> {
                             if (snapshot.hasError) {
                               return Center(
                                 child: Text(
-                                  'Terjadi kesalahan: ${snapshot.error}',
+                                  'Terjadi kesalahan:\n${snapshot.error}',
                                   textAlign: TextAlign.center,
+                                  style: theme.textTheme.bodyMedium,
                                 ),
                               );
                             }
 
                             if (!snapshot.hasData ||
                                 snapshot.data!.docs.isEmpty) {
-                              return const Center(
-                                child: Text('Belum ada percakapan'),
+                              return Center(
+                                child: Text(
+                                  'Belum ada percakapan',
+                                  style: theme.textTheme.bodyMedium,
+                                ),
                               );
                             }
 
                             final chatDocs = snapshot.data!.docs;
 
-                            return ListView.builder(
+                            return ListView.separated(
                               itemCount: chatDocs.length,
+                              separatorBuilder: (_, __) =>
+                                  const SizedBox(height: 8),
                               itemBuilder: (context, index) {
                                 final chatDoc = chatDocs[index];
                                 final data = chatDoc.data();
@@ -80,14 +88,16 @@ class PesanView extends GetView<PesanViewModel> {
                                     data['last_message'] ?? '';
 
                                 return FutureBuilder<Map<String, dynamic>?>(
-                                  future: controller.getVillaDetail(villaId),
+                                  future:
+                                      controller.getVillaDetail(villaId),
                                   builder: (context, villaSnap) {
                                     String name = 'Chat Villa';
 
                                     if (villaSnap.hasData &&
                                         villaSnap.data != null) {
                                       final villa = villaSnap.data!;
-                                      name = villa['name'] ?? 'Chat Villa';
+                                      name =
+                                          villa['name'] ?? 'Chat Villa';
                                     }
 
                                     final message = lastMessage.isEmpty
@@ -95,6 +105,7 @@ class PesanView extends GetView<PesanViewModel> {
                                         : lastMessage;
 
                                     return _chatTile(
+                                      context,
                                       name,
                                       message,
                                       0,
@@ -117,8 +128,11 @@ class PesanView extends GetView<PesanViewModel> {
     );
   }
 
-  // ==== CHAT TILE ====
+  // =========================
+  //  CHAT TILE (THEME AWARE)
+  // =========================
   Widget _chatTile(
+    BuildContext context,
     String name,
     String message,
     int unread,
@@ -126,9 +140,11 @@ class PesanView extends GetView<PesanViewModel> {
     String ownerId,
     String userId,
   ) {
-    return GestureDetector(
+    final theme = Theme.of(context);
+
+    return InkWell(
+      borderRadius: BorderRadius.circular(12),
       onTap: () {
-        // Pakai route GetX ke modules/chat_room
         Get.toNamed(
           '/chat-room',
           arguments: {
@@ -138,80 +154,71 @@ class PesanView extends GetView<PesanViewModel> {
           },
         );
       },
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 10),
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 12),
+        decoration: BoxDecoration(
+          color: theme.cardColor,
+          borderRadius: BorderRadius.circular(12),
+        ),
         child: Row(
           children: [
+            // ===== AVATAR =====
             CircleAvatar(
               radius: 22,
-              backgroundColor: Colors.grey,
+              backgroundColor: theme.colorScheme.primary.withOpacity(0.2),
               child: Text(
                 name.isNotEmpty ? name[0].toUpperCase() : 'C',
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
-                  color: Colors.white,
+                  color: theme.colorScheme.primary,
                 ),
               ),
             ),
 
             const SizedBox(width: 12),
 
+            // ===== TEXT =====
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
                     name,
-                    style: const TextStyle(
-                      fontSize: 16,
+                    style: theme.textTheme.bodyLarge?.copyWith(
                       fontWeight: FontWeight.bold,
                     ),
                   ),
-                  const SizedBox(height: 3),
+                  const SizedBox(height: 4),
                   Text(
                     message,
-                    style: const TextStyle(color: Colors.black54),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      color: theme.colorScheme.onSurface.withOpacity(0.6),
+                    ),
                   ),
                 ],
               ),
             ),
 
+            // ===== UNREAD =====
             if (unread > 0)
               Container(
                 padding: const EdgeInsets.all(8),
-                decoration: const BoxDecoration(
-                  color: Colors.grey,
+                decoration: BoxDecoration(
+                  color: theme.colorScheme.primary,
                   shape: BoxShape.circle,
                 ),
                 child: Text(
                   unread.toString(),
-                  style: const TextStyle(
-                    color: Colors.white,
+                  style: TextStyle(
+                    color: theme.colorScheme.onPrimary,
                     fontSize: 12,
                   ),
                 ),
               ),
           ],
-        ),
-      ),
-    );
-  }
-
-  // ==== FILTER BUTTON UI ====
-  Widget _filterButton(String text, {bool selected = false}) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
-      decoration: BoxDecoration(
-        color: selected ? Colors.black : Colors.grey[300],
-        borderRadius: BorderRadius.circular(20),
-      ),
-      child: Text(
-        text,
-        style: TextStyle(
-          color: selected ? Colors.white : Colors.black,
         ),
       ),
     );

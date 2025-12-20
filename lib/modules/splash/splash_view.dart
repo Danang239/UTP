@@ -1,8 +1,7 @@
-// lib/modules/splash/splash_view.dart
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:utp_flutter/app/routes/app_routes.dart';
-import 'package:utp_flutter/app_session.dart';
+import '../../app/routes/app_routes.dart';
+import '../../app_session.dart';
 
 class SplashView extends StatefulWidget {
   const SplashView({super.key});
@@ -11,19 +10,41 @@ class SplashView extends StatefulWidget {
   State<SplashView> createState() => _SplashViewState();
 }
 
-class _SplashViewState extends State<SplashView> {
+class _SplashViewState extends State<SplashView>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+  late Animation<double> _fade;
+  late Animation<double> _scale;
+
   @override
   void initState() {
     super.initState();
-    _redirect();
+
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1200),
+    );
+
+    _fade = CurvedAnimation(
+      parent: _controller,
+      curve: Curves.easeIn,
+    );
+
+    _scale = Tween<double>(begin: 0.85, end: 1).animate(
+      CurvedAnimation(parent: _controller, curve: Curves.easeOutBack),
+    );
+
+    _controller.forward();
+
+    _bootstrap();
   }
 
-  Future<void> _redirect() async {
-    await Future.delayed(const Duration(milliseconds: 800));
+  Future<void> _bootstrap() async {
+    await Future.delayed(const Duration(milliseconds: 2000));
 
-    final hasSession = await AppSession.loadSession();
+    final loggedIn = await AppSession.loadSession();
 
-    if (!hasSession) {
+    if (!loggedIn) {
       Get.offAllNamed(Routes.login);
       return;
     }
@@ -41,10 +62,40 @@ class _SplashViewState extends State<SplashView> {
   }
 
   @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return const Scaffold(
+    return Scaffold(
+      backgroundColor: const Color(0xFFEAF6FF),
       body: Center(
-        child: CircularProgressIndicator(),
+        child: FadeTransition(
+          opacity: _fade,
+          child: ScaleTransition(
+            scale: _scale,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Image.asset(
+                  'assets/images/logo_stayco.png',
+                  width: 140,
+                ),
+                const SizedBox(height: 16),
+                const Text(
+                  'STAY & Co',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w600,
+                    letterSpacing: 1.2,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
       ),
     );
   }

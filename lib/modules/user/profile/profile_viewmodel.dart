@@ -1,7 +1,10 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:get/get.dart';
 import 'package:utp_flutter/app_session.dart';
-import 'package:utp_flutter/app/routes/app_routes.dart'; // ⬅️ TAMBAH INI
+import 'package:utp_flutter/app/routes/app_routes.dart';
+
+// ⬇️ TAMBAHAN UNTUK CHAT ADMIN
+import 'package:firebase_auth/firebase_auth.dart';
 
 class ProfileViewModel extends GetxController {
   final name = ''.obs;
@@ -19,8 +22,9 @@ class ProfileViewModel extends GetxController {
     loadUser(); // pertama kali: baca dari Session + Firestore
   }
 
-  /// HANYA baca dari AppSession (tanpa ke Firestore)
-  /// Dipakai setelah Edit Profile sukses.
+  // ===============================
+  //  REFRESH DARI SESSION
+  // ===============================
   void refreshFromSession() {
     final id = AppSession.userDocId;
 
@@ -38,7 +42,9 @@ class ProfileViewModel extends GetxController {
     profileImg.value = AppSession.profileImg ?? '';
   }
 
-  /// Ambil data user dari Firestore + AppSession
+  // ===============================
+  //  LOAD USER DARI FIRESTORE
+  // ===============================
   Future<void> loadUser() async {
     // Isi dulu dari session supaya cepat muncul
     refreshFromSession();
@@ -66,7 +72,48 @@ class ProfileViewModel extends GetxController {
     }
   }
 
-  /// Logout
+  // ===============================
+  //  HUBUNGI ADMIN (FITUR BARU)
+  // ===============================
+  Future<void> hubungiAdmin() async {
+    final currentUser = FirebaseAuth.instance.currentUser;
+    if (currentUser == null) return;
+
+    final String userId = currentUser.uid;
+
+    // ambil nama user (sudah ada di state)
+    final String userName =
+        name.value.isNotEmpty ? name.value : 'User';
+
+    final chatRef =
+        _db.collection('admin_chats').doc(userId);
+
+    final chatSnap = await chatRef.get();
+
+    // jika chat belum ada, buat dulu
+    if (!chatSnap.exists) {
+      await chatRef.set({
+        'userId': userId,
+        'userName': userName,
+        'lastMessage': '',
+        'lastSender': '',
+        'updatedAt': FieldValue.serverTimestamp(),
+      });
+    }
+
+    // masuk ke halaman chat admin
+    Get.toNamed(
+      Routes.adminChat, // ⬅️ pastikan route ini ada
+      arguments: {
+        'userId': userId,
+        'userName': userName,
+      },
+    );
+  }
+
+  // ===============================
+  //  LOGOUT
+  // ===============================
   Future<void> logout() async {
     // bersihkan session lokal
     await AppSession.clear();
@@ -75,8 +122,7 @@ class ProfileViewModel extends GetxController {
     email.value = '';
     profileImg.value = '';
 
-    // KUNCI: balik ke halaman login via route name,
-    // supaya LoginBinding jalan dan LoginViewModel di-inject
+    // balik ke halaman login
     Get.offAllNamed(Routes.login);
   }
 }

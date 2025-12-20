@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../admin_dashboard_viewmodel.dart';
-import 'package:utp_flutter/app/routes/app_routes.dart';
 
 class SidebarWidget extends GetView<AdminDashboardViewModel> {
   const SidebarWidget({super.key});
@@ -75,11 +74,8 @@ class SidebarWidget extends GetView<AdminDashboardViewModel> {
                     title: title,
                     isSelected: isSelected,
                     onTap: () {
-                      if (index == 4) {
-                        Get.toNamed(Routes.adminMessages);
-                      } else {
-                        controller.selectMenu(index);
-                      }
+                      // 🔥 SIDEBAR HANYA GANTI STATE
+                      controller.selectMenu(index);
                     },
                   );
                 },
@@ -90,7 +86,7 @@ class SidebarWidget extends GetView<AdminDashboardViewModel> {
           const Divider(height: 24),
 
           // =====================
-          // 🔥 LOGOUT BUTTON (BARU)
+          // LOGOUT
           // =====================
           InkWell(
             onTap: () async {
@@ -128,7 +124,7 @@ class SidebarWidget extends GetView<AdminDashboardViewModel> {
                 Text(
                   'Logout',
                   style: TextStyle(
-                    color: Colors.red[700],
+                    color: Colors.red,
                     fontWeight: FontWeight.w500,
                     fontSize: 13,
                   ),

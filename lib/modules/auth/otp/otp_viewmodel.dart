@@ -2,6 +2,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:utp_flutter/main.dart';
+import 'package:utp_flutter/modules/user/main/main_page.dart';
 
 class OtpViewModel extends GetxController {
   final String phoneNumber;

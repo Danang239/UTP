@@ -8,19 +8,28 @@ class MyBookingsView extends GetView<MyBookingsViewModel> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
     return Scaffold(
+      backgroundColor: theme.scaffoldBackgroundColor,
       appBar: AppBar(
         title: const Text(
           "Pesanan Saya",
           style: TextStyle(fontWeight: FontWeight.bold),
         ),
         centerTitle: true,
+        backgroundColor: theme.appBarTheme.backgroundColor,
+        foregroundColor: theme.appBarTheme.foregroundColor,
+        elevation: 0,
       ),
 
       body: Obx(() {
         if (controller.errorMessage.value != null) {
           return Center(
-            child: Text(controller.errorMessage.value!),
+            child: Text(
+              controller.errorMessage.value!,
+              style: theme.textTheme.bodyMedium,
+            ),
           );
         }
 
@@ -29,8 +38,11 @@ class MyBookingsView extends GetView<MyBookingsViewModel> {
         }
 
         if (controller.bookings.isEmpty) {
-          return const Center(
-            child: Text("Anda belum memiliki pesanan"),
+          return Center(
+            child: Text(
+              "Anda belum memiliki pesanan",
+              style: theme.textTheme.bodyMedium,
+            ),
           );
         }
 
@@ -45,7 +57,7 @@ class MyBookingsView extends GetView<MyBookingsViewModel> {
 
             final villaName = data['villa_name'] ?? 'Tanpa Nama';
             final villaLocation = data['villa_location'] ?? '-';
-            final status = data['status'] ?? 'pending';
+            final status = (data['status'] ?? 'pending').toString();
 
             final checkIn = (data['check_in'] as Timestamp?)?.toDate();
             final checkOut = (data['check_out'] as Timestamp?)?.toDate();
@@ -58,48 +70,91 @@ class MyBookingsView extends GetView<MyBookingsViewModel> {
             }
 
             return Container(
-              padding: const EdgeInsets.all(12),
+              padding: const EdgeInsets.all(14),
               decoration: BoxDecoration(
-                color: Colors.grey[200],
+                color: theme.cardColor,
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  // ===== NAMA VILLA =====
                   Text(
                     villaName,
-                    style: const TextStyle(
-                      fontSize: 16,
+                    style: theme.textTheme.bodyLarge?.copyWith(
                       fontWeight: FontWeight.bold,
                     ),
                   ),
+
                   const SizedBox(height: 4),
+
+                  // ===== LOKASI =====
                   Text(
                     villaLocation,
-                    style: TextStyle(
-                      fontSize: 13,
-                      color: Colors.grey[700],
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      color:
+                          theme.colorScheme.onSurface.withOpacity(0.6),
                     ),
                   ),
-                  const SizedBox(height: 6),
+
+                  const SizedBox(height: 8),
+
+                  // ===== TANGGAL =====
                   Text(
                     dateText,
-                    style: const TextStyle(fontSize: 13),
+                    style: theme.textTheme.bodySmall,
                   ),
-                  const SizedBox(height: 6),
-                  Text(
-                    "Status: $status",
-                    style: const TextStyle(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
+
+                  const SizedBox(height: 10),
+
+                  // ===== STATUS =====
+                  _statusChip(context, status),
                 ],
               ),
             );
           },
         );
       }),
+    );
+  }
+
+  // ===============================
+  //  STATUS CHIP (THEME AWARE)
+  // ===============================
+  Widget _statusChip(BuildContext context, String status) {
+    final theme = Theme.of(context);
+
+    Color bgColor;
+    Color textColor = theme.colorScheme.onPrimary;
+
+    switch (status.toLowerCase()) {
+      case 'selesai':
+        bgColor = Colors.green;
+        break;
+      case 'proses':
+        bgColor = Colors.orange;
+        break;
+      case 'dibatalkan':
+        bgColor = Colors.red;
+        break;
+      default:
+        bgColor = theme.colorScheme.primary;
+    }
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      decoration: BoxDecoration(
+        color: bgColor,
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Text(
+        status,
+        style: TextStyle(
+          color: textColor,
+          fontSize: 12,
+          fontWeight: FontWeight.w600,
+        ),
+      ),
     );
   }
 }
