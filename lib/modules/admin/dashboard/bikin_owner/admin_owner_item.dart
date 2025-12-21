@@ -18,27 +18,39 @@ class AdminOwnerItem {
     required this.isActive,
   });
 
-  // =====================================================
-  // FROM FIRESTORE
-  // =====================================================
   factory AdminOwnerItem.fromFirestore(
-    Map<String, dynamic> data,
+    Map<
+      String,
+      dynamic
+    >
+    data,
     String docId,
   ) {
     return AdminOwnerItem(
-      id: docId, // 🔥 UID Auth = docId Firestore
-      name: data['name'] ?? 'Tidak ada nama',
-      email: data['email'] ?? 'Tidak ada email',
-      phone: data['phone'] ?? 'Tidak ada telepon',
-      role: data['role'] ?? 'owner',
-      isActive: data['is_active'] ?? true,
+      id: docId,
+      name:
+          data['name'] ??
+          'Tidak ada nama',
+      email:
+          data['email'] ??
+          'Tidak ada email',
+      phone:
+          data['phone'] ??
+          'Tidak ada telepon',
+      role:
+          data['role'] ??
+          'owner',
+      isActive:
+          data['is_active'] ??
+          true,
     );
   }
 
-  // =====================================================
-  // TO MAP (OPSIONAL – untuk update Firestore)
-  // =====================================================
-  Map<String, dynamic> toMap() {
+  Map<
+    String,
+    dynamic
+  >
+  toMap() {
     return {
       'name': name,
       'email': email,

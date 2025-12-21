@@ -1,139 +1,206 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:utp_flutter/modules/admin/dashboard/bikin_owner/detail_owner/admin_owner_detail_viewmodel.dart';
+import 'admin_owner_detail_viewmodel.dart';
 
-class AdminOwnerDetailView extends StatefulWidget {
-  const AdminOwnerDetailView({super.key});
-
-  @override
-  State<AdminOwnerDetailView> createState() => _AdminOwnerDetailViewState();
-}
-
-class _AdminOwnerDetailViewState extends State<AdminOwnerDetailView> {
-  late final String ownerId;
-  late final AdminOwnerDetailViewModel controller;
+class AdminOwnerDetailView
+    extends
+        GetView<
+          AdminOwnerDetailViewModel
+        > {
+  const AdminOwnerDetailView({
+    super.key,
+  });
 
   @override
-  void initState() {
-    super.initState();
-
-    ownerId = Get.arguments as String;
-    controller = Get.find<AdminOwnerDetailViewModel>();
-
-    // 🔥 PANGGIL SEKALI SAJA
-    controller.loadOwnerAndVillas(ownerId);
-  }
-
-  @override
-  Widget build(BuildContext context) {
+  Widget build(
+    BuildContext context,
+  ) {
     return Scaffold(
       appBar: AppBar(
-        title: Obx(() {
-          final owner = controller.owner.value;
-          return Text(
-            owner == null
-                ? 'Detail Owner'
-                : 'Detail Owner - ${owner.name}',
-          );
-        }),
+        title: const Text(
+          'Detail Owner',
+        ),
+        actions: [
+          IconButton(
+            icon: const Icon(
+              Icons.refresh,
+            ),
+            onPressed: controller.loadDetail,
+          ),
+        ],
       ),
       body: Padding(
-        padding: const EdgeInsets.all(24),
-        child: Obx(() {
-          // =============================
-          // LOADING
-          // =============================
-          if (controller.isLoading.value) {
-            return const Center(child: CircularProgressIndicator());
-          }
+        padding: const EdgeInsets.all(
+          16,
+        ),
+        child: Obx(
+          () {
+            if (controller.isLoading.value) {
+              return const Center(
+                child: CircularProgressIndicator(),
+              );
+            }
 
-          // =============================
-          // ERROR
-          // =============================
-          if (controller.errorMessage.value.isNotEmpty) {
-            return Center(
-              child: Text(
-                controller.errorMessage.value,
-                style: const TextStyle(color: Colors.red),
-              ),
-            );
-          }
-
-          final owner = controller.owner.value;
-
-          if (owner == null) {
-            return const Center(
-              child: Text('Data owner tidak tersedia'),
-            );
-          }
-
-          return Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // =============================
-              // OWNER INFO
-              // =============================
-              Text(
-                owner.name,
-                style: const TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
+            if (controller.errorMessage.value.isNotEmpty) {
+              return Center(
+                child: Text(
+                  controller.errorMessage.value,
+                  style: const TextStyle(
+                    color: Colors.red,
+                  ),
+                  textAlign: TextAlign.center,
                 ),
-              ),
-              const SizedBox(height: 4),
-              Text(owner.email),
-              const SizedBox(height: 4),
-              Text(owner.phone),
+              );
+            }
 
-              const SizedBox(height: 20),
-
-              const Text(
-                'Villa milik owner:',
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-
-              const SizedBox(height: 8),
-
-              // =============================
-              // VILLA LIST
-              // =============================
-              Expanded(
-                child: controller.villas.isEmpty
-                    ? const Center(
-                        child: Text('Owner ini belum memiliki villa'),
-                      )
-                    : ListView.builder(
-                        itemCount: controller.villas.length,
-                        itemBuilder: (ctx, index) {
-                          final villa = controller.villas[index];
-
-                          return Card(
-                            margin:
-                                const EdgeInsets.symmetric(vertical: 8),
-                            child: ListTile(
-                              title: Text(
-                                villa['name'] ??
-                                    'Nama villa tidak tersedia',
-                              ),
-                              subtitle: Text(
-                                villa['location'] ??
-                                    villa['address'] ??
-                                    'Alamat tidak tersedia',
-                              ),
-                              trailing: Text(
-                                'Rp ${villa['price'] ?? villa['weekday_price'] ?? 0}',
-                              ),
-                            ),
-                          );
-                        },
+            return ListView(
+              children: [
+                _card(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        'Informasi Owner',
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16,
+                        ),
                       ),
+                      const SizedBox(
+                        height: 12,
+                      ),
+                      _row(
+                        'UID',
+                        controller.ownerId.value,
+                      ),
+                      _row(
+                        'Nama',
+                        controller.name.value,
+                      ),
+                      _row(
+                        'Email',
+                        controller.email.value,
+                      ),
+                      _row(
+                        'Telepon',
+                        controller.phone.value,
+                      ),
+                      _row(
+                        'Role',
+                        controller.role.value,
+                      ),
+                      _row(
+                        'Status',
+                        controller.isActive.value
+                            ? 'Aktif'
+                            : 'Nonaktif',
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(
+                  height: 16,
+                ),
+                _card(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        'Villa Milik Owner',
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16,
+                        ),
+                      ),
+                      const SizedBox(
+                        height: 12,
+                      ),
+                      Text(
+                        'Total Villa: ${controller.totalVilla.value}',
+                      ),
+                      const SizedBox(
+                        height: 12,
+                      ),
+                      if (controller.villaNames.isEmpty)
+                        const Text(
+                          'Owner ini belum punya villa.',
+                        )
+                      else
+                        ...controller.villaNames.map(
+                          (
+                            n,
+                          ) => Padding(
+                            padding: const EdgeInsets.only(
+                              bottom: 6,
+                            ),
+                            child: Text(
+                              '• $n',
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
+              ],
+            );
+          },
+        ),
+      ),
+    );
+  }
+
+  Widget _card({
+    required Widget child,
+  }) {
+    return Container(
+      padding: const EdgeInsets.all(
+        16,
+      ),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(
+          16,
+        ),
+        boxShadow: const [
+          BoxShadow(
+            blurRadius: 4,
+            offset: Offset(
+              0,
+              2,
+            ),
+            color: Colors.black12,
+          ),
+        ],
+      ),
+      child: child,
+    );
+  }
+
+  Widget _row(
+    String label,
+    String value,
+  ) {
+    return Padding(
+      padding: const EdgeInsets.only(
+        bottom: 8,
+      ),
+      child: Row(
+        children: [
+          SizedBox(
+            width: 90,
+            child: Text(
+              label,
+              style: const TextStyle(
+                fontWeight: FontWeight.w600,
               ),
-            ],
-          );
-        }),
+            ),
+          ),
+          Expanded(
+            child: Text(
+              value,
+            ),
+          ),
+        ],
       ),
     );
   }

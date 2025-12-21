@@ -4,11 +4,20 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:get/get.dart';
 import 'package:utp_flutter/modules/admin/dashboard/bikin_owner/admin_owner_item.dart';
 
-class AdminDataOwnerViewModel extends GetxController {
+class AdminDataOwnerViewModel
+    extends
+        GetxController {
   final FirebaseFirestore _db = FirebaseFirestore.instance;
 
   final RxBool isLoading = false.obs;
-  final RxList<AdminOwnerItem> owners = <AdminOwnerItem>[].obs;
+  final RxList<
+    AdminOwnerItem
+  >
+  owners =
+      <
+            AdminOwnerItem
+          >[]
+          .obs;
   final RxString errorMessage = ''.obs;
 
   @override
@@ -20,21 +29,39 @@ class AdminDataOwnerViewModel extends GetxController {
   // =====================================================
   // LOAD OWNER
   // =====================================================
-  Future<void> loadOwners() async {
+  Future<
+    void
+  >
+  loadOwners() async {
     try {
       isLoading.value = true;
+      errorMessage.value = '';
 
       final snapshot = await _db
-          .collection('users')
-          .where('role', isEqualTo: 'owner')
+          .collection(
+            'users',
+          )
+          .where(
+            'role',
+            isEqualTo: 'owner',
+          )
           .get();
 
       owners.assignAll(
         snapshot.docs
-            .map((d) => AdminOwnerItem.fromFirestore(d.data(), d.id))
+            .map(
+              (
+                d,
+              ) => AdminOwnerItem.fromFirestore(
+                d.data(),
+                d.id,
+              ),
+            )
             .toList(),
       );
-    } catch (e) {
+    } catch (
+      e
+    ) {
       errorMessage.value = e.toString();
     } finally {
       isLoading.value = false;
@@ -44,7 +71,10 @@ class AdminDataOwnerViewModel extends GetxController {
   // =====================================================
   // CREATE OWNER (AUTH + FIRESTORE | ADMIN SAFE)
   // =====================================================
-  Future<void> createOwner({
+  Future<
+    void
+  >
+  createOwner({
     required String name,
     required String email,
     required String phone,
@@ -60,11 +90,18 @@ class AdminDataOwnerViewModel extends GetxController {
 
       final emailTrim = email.trim();
 
-      // 🔎 Cek email di Firestore
+      // 🔎 cek email di firestore
       final exist = await _db
-          .collection('users')
-          .where('email', isEqualTo: emailTrim)
-          .limit(1)
+          .collection(
+            'users',
+          )
+          .where(
+            'email',
+            isEqualTo: emailTrim,
+          )
+          .limit(
+            1,
+          )
           .get();
 
       if (exist.docs.isNotEmpty) {
@@ -72,20 +109,21 @@ class AdminDataOwnerViewModel extends GetxController {
       }
 
       // =====================================================
-      // 🔐 INIT SECONDARY FIREBASE APP
+      // INIT SECONDARY FIREBASE APP
       // =====================================================
       secondaryApp = await Firebase.initializeApp(
         name: 'Secondary',
         options: Firebase.app().options,
       );
 
-      final secondaryAuth = FirebaseAuth.instanceFor(app: secondaryApp);
+      final secondaryAuth = FirebaseAuth.instanceFor(
+        app: secondaryApp,
+      );
 
       // =====================================================
-      // 🔐 CREATE OWNER IN AUTH
+      // CREATE AUTH USER
       // =====================================================
-      final credential =
-          await secondaryAuth.createUserWithEmailAndPassword(
+      final credential = await secondaryAuth.createUserWithEmailAndPassword(
         email: emailTrim,
         password: password,
       );
@@ -93,20 +131,29 @@ class AdminDataOwnerViewModel extends GetxController {
       final uid = credential.user!.uid;
 
       // =====================================================
-      // 💾 SAVE TO FIRESTORE
+      // SAVE TO FIRESTORE
       // =====================================================
-      await _db.collection('users').doc(uid).set({
-        'uid': uid,
-        'name': name.trim(),
-        'email': emailTrim,
-        'phone': phone.trim(),
-        'role': 'owner',
-        'profile_img': '',
-        'is_active': true,
-        'created_by': 'admin',
-        'created_at': FieldValue.serverTimestamp(),
-        'updated_at': FieldValue.serverTimestamp(),
-      });
+      await _db
+          .collection(
+            'users',
+          )
+          .doc(
+            uid,
+          )
+          .set(
+            {
+              'uid': uid,
+              'name': name.trim(),
+              'email': emailTrim,
+              'phone': phone.trim(),
+              'role': 'owner',
+              'profile_img': '',
+              'is_active': true,
+              'created_by': 'admin',
+              'created_at': FieldValue.serverTimestamp(),
+              'updated_at': FieldValue.serverTimestamp(),
+            },
+          );
 
       await secondaryAuth.signOut();
       await secondaryApp.delete();
@@ -118,9 +165,14 @@ class AdminDataOwnerViewModel extends GetxController {
         'Akun owner berhasil dibuat',
         snackPosition: SnackPosition.BOTTOM,
       );
-    } catch (e) {
+    } catch (
+      e
+    ) {
       errorMessage.value = e.toString();
-      Get.snackbar('Error', errorMessage.value);
+      Get.snackbar(
+        'Error',
+        errorMessage.value,
+      );
     } finally {
       isLoading.value = false;
     }
@@ -129,7 +181,10 @@ class AdminDataOwnerViewModel extends GetxController {
   // =====================================================
   // UPDATE OWNER (Firestore only)
   // =====================================================
-  Future<void> updateOwner({
+  Future<
+    void
+  >
+  updateOwner({
     required String ownerId,
     required String name,
     required String email,
@@ -138,11 +193,20 @@ class AdminDataOwnerViewModel extends GetxController {
     try {
       isLoading.value = true;
 
-      await _db.collection('users').doc(ownerId).update({
-        'name': name.trim(),
-        'phone': phone.trim(),
-        'updated_at': FieldValue.serverTimestamp(),
-      });
+      await _db
+          .collection(
+            'users',
+          )
+          .doc(
+            ownerId,
+          )
+          .update(
+            {
+              'name': name.trim(),
+              'phone': phone.trim(),
+              'updated_at': FieldValue.serverTimestamp(),
+            },
+          );
 
       await loadOwners();
     } finally {
@@ -151,18 +215,122 @@ class AdminDataOwnerViewModel extends GetxController {
   }
 
   // =====================================================
-  // DELETE OWNER (SOFT DELETE)
+  // SOFT DELETE (NONAKTIFKAN)
   // =====================================================
-  Future<void> deleteOwner(String ownerId) async {
+  Future<
+    void
+  >
+  deleteOwner(
+    String ownerId,
+  ) async {
     try {
       isLoading.value = true;
 
-      await _db.collection('users').doc(ownerId).update({
-        'is_active': false,
-        'updated_at': FieldValue.serverTimestamp(),
-      });
+      await _db
+          .collection(
+            'users',
+          )
+          .doc(
+            ownerId,
+          )
+          .update(
+            {
+              'is_active': false,
+              'updated_at': FieldValue.serverTimestamp(),
+            },
+          );
 
       await loadOwners();
+    } finally {
+      isLoading.value = false;
+    }
+  }
+
+  // =====================================================
+  // TOGGLE ACTIVE / NONACTIVE
+  // =====================================================
+  Future<
+    void
+  >
+  toggleActiveOwner({
+    required String ownerId,
+    required bool makeActive,
+  }) async {
+    try {
+      isLoading.value = true;
+
+      await _db
+          .collection(
+            'users',
+          )
+          .doc(
+            ownerId,
+          )
+          .update(
+            {
+              'is_active': makeActive,
+              'updated_at': FieldValue.serverTimestamp(),
+            },
+          );
+
+      await loadOwners();
+
+      Get.snackbar(
+        'Berhasil',
+        makeActive
+            ? 'Owner diaktifkan'
+            : 'Owner dinonaktifkan',
+        snackPosition: SnackPosition.BOTTOM,
+      );
+    } catch (
+      e
+    ) {
+      errorMessage.value = e.toString();
+      Get.snackbar(
+        'Error',
+        errorMessage.value,
+      );
+    } finally {
+      isLoading.value = false;
+    }
+  }
+
+  // =====================================================
+  // HARD DELETE OWNER (Firestore only)
+  // =====================================================
+  Future<
+    void
+  >
+  hardDeleteOwner(
+    String ownerId,
+  ) async {
+    try {
+      isLoading.value = true;
+
+      await _db
+          .collection(
+            'users',
+          )
+          .doc(
+            ownerId,
+          )
+          .delete();
+
+      await loadOwners();
+
+      Get.snackbar(
+        'Berhasil',
+        'Owner dihapus dari Firestore',
+        snackPosition: SnackPosition.BOTTOM,
+      );
+    } catch (
+      e
+    ) {
+      errorMessage.value = e.toString();
+      Get.snackbar(
+        'Error',
+        errorMessage.value,
+      );
     } finally {
       isLoading.value = false;
     }

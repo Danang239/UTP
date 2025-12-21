@@ -7,7 +7,9 @@ import 'package:utp_flutter/app/routes/app_routes.dart';
 import 'package:utp_flutter/main.dart';
 import 'package:utp_flutter/modules/user/main/main_page.dart';
 
-class LoginViewModel extends GetxController {
+class LoginViewModel
+    extends
+        GetxController {
   final FirebaseAuth _auth = FirebaseAuth.instance;
 
   final isLoading = false.obs;
@@ -16,12 +18,19 @@ class LoginViewModel extends GetxController {
   // =====================================================
   // LOGIN (EMAIL / PHONE + PASSWORD)
   // =====================================================
-  Future<void> login(String identifier, String password) async {
+  Future<
+    void
+  >
+  login(
+    String identifier,
+    String password,
+  ) async {
     try {
       isLoading.value = true;
       errorMessage.value = null;
 
-      if (identifier.isEmpty || password.isEmpty) {
+      if (identifier.isEmpty ||
+          password.isEmpty) {
         errorMessage.value = 'Email / Nomor HP dan password wajib diisi';
         return;
       }
@@ -31,16 +40,29 @@ class LoginViewModel extends GetxController {
       // =====================================================
       String emailToLogin = identifier.trim();
 
-      if (!identifier.contains('@')) {
+      if (!identifier.contains(
+        '@',
+      )) {
         String phone = identifier.trim();
-        if (phone.startsWith('0')) {
-          phone = phone.substring(1);
+        if (phone.startsWith(
+          '0',
+        )) {
+          phone = phone.substring(
+            1,
+          );
         }
 
         final snap = await FirebaseFirestore.instance
-            .collection('users')
-            .where('phone', isEqualTo: phone)
-            .limit(1)
+            .collection(
+              'users',
+            )
+            .where(
+              'phone',
+              isEqualTo: phone,
+            )
+            .limit(
+              1,
+            )
             .get();
 
         if (snap.docs.isEmpty) {
@@ -64,7 +86,9 @@ class LoginViewModel extends GetxController {
       // =====================================================
       // 3️⃣ AMBIL DATA USER DARI FIRESTORE (BERDASARKAN UID)
       // =====================================================
-      final ok = await AppSession.saveUserFromUid(uid);
+      final ok = await AppSession.saveUserFromUid(
+        uid,
+      );
       if (!ok) {
         errorMessage.value = 'Gagal memuat data akun';
         await _auth.signOut();
@@ -72,26 +96,71 @@ class LoginViewModel extends GetxController {
       }
 
       // =====================================================
+      // ✅ TAMBAHAN: SET ownerId UNTUK ROLE OWNER (BIAR DASHBOARD BISA QUERY)
+      // (TIDAK MENGUBAH ALUR LOGIN, CUMA NGESET SESSION)
+      // =====================================================
+      if (AppSession.role ==
+          'owner') {
+        final userDoc = await FirebaseFirestore.instance
+            .collection(
+              'users',
+            )
+            .doc(
+              uid,
+            )
+            .get();
+
+        final data =
+            userDoc.data() ??
+            {};
+
+        // prioritas: owner_id -> uid field -> auth uid
+        AppSession.ownerId =
+            (data['owner_id'] ??
+                    data['uid'] ??
+                    uid)
+                .toString();
+      } else {
+        AppSession.ownerId = null;
+      }
+
+      // =====================================================
       // 4️⃣ REDIRECT SESUAI ROLE
       // =====================================================
-      final role = AppSession.role ?? 'user';
+      final role =
+          AppSession.role ??
+          'user';
 
-      if (role == 'admin') {
-        Get.offAllNamed(Routes.adminDashboard);
-      } else if (role == 'owner') {
-        Get.offAllNamed(Routes.ownerDashboard);
+      if (role ==
+          'admin') {
+        Get.offAllNamed(
+          Routes.adminDashboard,
+        );
+      } else if (role ==
+          'owner') {
+        Get.offAllNamed(
+          Routes.ownerDashboard,
+        );
       } else {
-        Get.offAll(() => const MainPage());
+        Get.offAll(
+          () => const MainPage(),
+        );
       }
-    } on FirebaseAuthException catch (e) {
-      if (e.code == 'user-not-found') {
+    } on FirebaseAuthException catch (
+      e
+    ) {
+      if (e.code ==
+          'user-not-found') {
         errorMessage.value = 'Akun tidak ditemukan';
-      } else if (e.code == 'wrong-password') {
+      } else if (e.code ==
+          'wrong-password') {
         errorMessage.value = 'Password salah';
       } else {
         errorMessage.value = e.message;
       }
-    } catch (e) {
+    } catch (
+      e
+    ) {
       errorMessage.value = 'Terjadi kesalahan: $e';
     } finally {
       isLoading.value = false;

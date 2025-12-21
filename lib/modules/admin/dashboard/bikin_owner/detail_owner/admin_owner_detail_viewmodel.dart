@@ -1,58 +1,205 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:get/get.dart';
-import 'package:utp_flutter/modules/admin/dashboard/bikin_owner/admin_owner_item.dart';
 
-class AdminOwnerDetailViewModel extends GetxController {
+class AdminOwnerDetailViewModel
+    extends
+        GetxController {
   final FirebaseFirestore _db = FirebaseFirestore.instance;
 
-  final isLoading = false.obs;
-  final errorMessage = ''.obs;
+  final RxBool isLoading = false.obs;
+  final RxString errorMessage = ''.obs;
 
-  // ✅ PAKAI Rxn (nullable) → aman hot reload
-  final owner = Rxn<AdminOwnerItem>();
+  // owner id dari arguments
+  final RxString ownerId = ''.obs;
 
-  // list villa milik owner
-  final villas = <Map<String, dynamic>>[].obs;
+  // data owner
+  final RxString name = '-'.obs;
+  final RxString email = '-'.obs;
+  final RxString phone = '-'.obs;
+  final RxString role = 'owner'.obs;
+  final RxBool isActive = true.obs;
 
-  Future<void> loadOwnerAndVillas(String ownerId) async {
+  // villa data
+  final RxInt totalVilla = 0.obs;
+  final RxList<
+    String
+  >
+  villaNames =
+      <
+            String
+          >[]
+          .obs;
+
+  @override
+  void onInit() {
+    super.onInit();
+
+    final arg = Get.arguments;
+    if (arg ==
+            null ||
+        arg.toString().trim().isEmpty) {
+      errorMessage.value = 'ownerId kosong';
+      return;
+    }
+
+    ownerId.value = arg.toString().trim();
+    loadDetail();
+  }
+
+  Future<
+    void
+  >
+  loadDetail() async {
     try {
       isLoading.value = true;
       errorMessage.value = '';
-      owner.value = null;
-      villas.clear();
 
-      // =====================
-      // LOAD OWNER
-      // =====================
-      final ownerSnapshot =
-          await _db.collection('users').doc(ownerId).get();
+      final uid = ownerId.value;
 
-      if (!ownerSnapshot.exists) {
-        errorMessage.value = 'Owner tidak ditemukan';
+      // 1) ambil owner
+      final userDoc = await _db
+          .collection(
+            'users',
+          )
+          .doc(
+            uid,
+          )
+          .get();
+      if (!userDoc.exists) {
+        errorMessage.value = 'Owner tidak ditemukan di users/$uid';
         return;
       }
 
-      owner.value = AdminOwnerItem.fromFirestore(
-        ownerSnapshot.data()!,
-        ownerSnapshot.id,
-      );
+      final data =
+          userDoc.data() ??
+          {};
+      name.value =
+          (data['name'] ??
+                  '-')
+              .toString();
+      email.value =
+          (data['email'] ??
+                  '-')
+              .toString();
+      phone.value =
+          (data['phone'] ??
+                  '-')
+              .toString();
+      role.value =
+          (data['role'] ??
+                  'owner')
+              .toString();
+      isActive.value =
+          (data['is_active'] ??
+              true) ==
+          true;
 
-      // =====================
-      // LOAD VILLAS
-      // =====================
-      final villaSnapshot = await _db
-          .collection('villas')
-          .where('owner_id', isEqualTo: ownerId)
+      // 2) ambil villa milik owner
+      // utama: owner_id
+      final snapA = await _db
+          .collection(
+            'villas',
+          )
+          .where(
+            'owner_id',
+            isEqualTo: uid,
+          )
           .get();
 
-      villas.assignAll(
-        villaSnapshot.docs.map((doc) {
-          final data = doc.data();
-          data['id'] = doc.id; // optional, biar gampang dipakai di UI
-          return data;
-        }).toList(),
+      // fallback: ownerId (kalau ada data versi lama)
+      final List<
+        QueryDocumentSnapshot<
+          Map<
+            String,
+            dynamic
+          >
+        >
+      >
+      allDocs =
+          <
+            QueryDocumentSnapshot<
+              Map<
+                String,
+                dynamic
+              >
+            >
+          >[];
+
+      allDocs.addAll(
+        snapA.docs,
       );
-    } catch (e) {
+
+      if (allDocs.isEmpty) {
+        final snapB = await _db
+            .collection(
+              'villas',
+            )
+            .where(
+              'ownerId',
+              isEqualTo: uid,
+            )
+            .get();
+        allDocs.addAll(
+          snapB.docs,
+        );
+      }
+
+      // DEBUG (biar kamu tau bener2 kebaca apa engga)
+      // ignore: avoid_print
+      print(
+        'ADMIN OWNER DETAIL uid=$uid | villaDocs=${allDocs.length}',
+      );
+      if (allDocs.isNotEmpty) {
+        // ignore: avoid_print
+        print(
+          'first villa keys=${allDocs.first.data().keys.toList()}',
+        );
+        // ignore: avoid_print
+        print(
+          'first villa owner_id=${allDocs.first.data()['owner_id']}',
+        );
+        // ignore: avoid_print
+        print(
+          'first villa ownerId=${allDocs.first.data()['ownerId']}',
+        );
+      }
+
+      final names =
+          <
+            String
+          >[];
+      for (final d in allDocs) {
+        final v = d.data();
+        final n =
+            (v['name'] ??
+                    v['villa_name'] ??
+                    d.id)
+                .toString();
+        names.add(
+          n,
+        );
+      }
+
+      names.sort(
+        (
+          a,
+          b,
+        ) => a.toLowerCase().compareTo(
+          b.toLowerCase(),
+        ),
+      );
+      villaNames.assignAll(
+        names,
+      );
+      totalVilla.value = names.length;
+    } catch (
+      e,
+      st
+    ) {
+      // ignore: avoid_print
+      print(
+        'ERROR loadDetail: $e\n$st',
+      );
       errorMessage.value = e.toString();
     } finally {
       isLoading.value = false;
