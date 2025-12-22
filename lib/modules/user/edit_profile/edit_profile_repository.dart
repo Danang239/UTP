@@ -1,55 +1,63 @@
 import 'dart:typed_data';
+import 'dart:io';
+import 'package:flutter/foundation.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 
 class EditProfileRepository {
   final _db = FirebaseFirestore.instance;
-  final _supabase = Supabase.instance.client;
 
   // ==========================
-  // UPLOAD FOTO KE SUPABASE
+  // UPLOAD FOTO VIA BACKEND
   // ==========================
-  Future<String?> uploadProfileImage({
+  Future<String> uploadProfileImage({
     required String userId,
-    required Uint8List bytes,
+    required String role,
+    Uint8List? bytes,
+    File? file,
   }) async {
-    try {
-      final path = 'profile_images/$userId.jpg';
+    final uri = Uri.parse('http://localhost:3000/upload/profile');
+    final request = http.MultipartRequest('POST', uri);
 
-      await _supabase.storage.from('profile').uploadBinary(
-            path,
-            bytes,
-            fileOptions: const FileOptions(
-              upsert: true,
-              contentType: 'image/jpeg',
-            ),
-          );
+    request.fields['userId'] = userId;
+    request.fields['role'] = role;
 
-      // Ambil public URL
-      final baseUrl =
-          _supabase.storage.from('profile').getPublicUrl(path);
-
-      // Cache busting supaya foto langsung update
-      final publicUrl =
-          '$baseUrl?t=${DateTime.now().millisecondsSinceEpoch}';
-
-      return publicUrl;
-    } catch (e) {
-      throw Exception('Upload foto gagal: $e');
+    if (kIsWeb) {
+      request.files.add(
+        http.MultipartFile.fromBytes(
+          'image',
+          bytes!,
+          filename: '$userId.jpg',
+        ),
+      );
+    } else {
+      request.files.add(
+        await http.MultipartFile.fromPath(
+          'image',
+          file!.path,
+        ),
+      );
     }
+
+    final response = await request.send();
+    final body = await response.stream.bytesToString();
+
+    if (response.statusCode != 200) {
+      throw Exception('Upload gagal: $body');
+    }
+
+    final data = jsonDecode(body);
+    return data['url'];
   }
 
   // ==========================
-  // UPDATE USER FIRESTORE
+  // UPDATE FIRESTORE
   // ==========================
   Future<void> updateUserProfile({
     required String userId,
     required Map<String, dynamic> data,
   }) async {
-    try {
-      await _db.collection('users').doc(userId).update(data);
-    } catch (e) {
-      throw Exception('Update profil gagal: $e');
-    }
+    await _db.collection('users').doc(userId).update(data);
   }
 }

@@ -1,7 +1,7 @@
 // lib/app/routes/app_pages.dart
 import 'package:get/get.dart';
-import 'package:utp_flutter/modules/user/search/search_binding.dart';
-import 'package:utp_flutter/modules/user/search/search_view.dart';
+import 'package:utp_flutter/modules/owner/owner_dashboard_binding.dart';
+import 'package:utp_flutter/modules/owner/owner_dashboard_view.dart';
 import 'app_routes.dart';
 
 // =====================
@@ -27,6 +27,8 @@ import 'package:utp_flutter/modules/user/payment/payment_binding.dart';
 import 'package:utp_flutter/modules/user/payment/payment_view.dart';
 import 'package:utp_flutter/modules/user/chat_room/chat_room_binding.dart';
 import 'package:utp_flutter/modules/user/chat_room/chat_room_view.dart';
+import 'package:utp_flutter/modules/user/search/search_binding.dart';
+import 'package:utp_flutter/modules/user/search/search_view.dart';
 
 // =====================
 // ADMIN
@@ -49,15 +51,19 @@ import 'package:utp_flutter/modules/admin/dashboard/bikin_owner/edit_owner/admin
 // =====================
 import 'package:utp_flutter/modules/owner/owner_dashboard_binding.dart';
 import 'package:utp_flutter/modules/owner/owner_dashboard_view.dart';
+
 import 'package:utp_flutter/modules/owner/profile/profile_binding.dart';
 import 'package:utp_flutter/modules/owner/profile/profile_view.dart';
+
+import 'package:utp_flutter/modules/owner/villa/villa_binding.dart';
+import 'package:utp_flutter/modules/owner/villa/villa_view.dart';
 
 class AppPages {
   static const initial = Routes.splash;
 
   static final routes = <GetPage>[
     // =====================
-    // SPLASH (WAJIB PALING ATAS)
+    // SPLASH
     // =====================
     GetPage(
       name: Routes.splash,
@@ -74,48 +80,41 @@ class AppPages {
       page: () => const LoginView(),
       binding: LoginBinding(),
       transition: Transition.fadeIn,
-      transitionDuration: const Duration(milliseconds: 400),
     ),
     GetPage(
       name: Routes.register,
       page: () => const RegisterView(),
       binding: RegisterBinding(),
       transition: Transition.rightToLeft,
-      transitionDuration: const Duration(milliseconds: 400),
     ),
 
     // =====================
-    // USER (🔥 HOME → MAIN PAGE)
+    // USER
     // =====================
     GetPage(
       name: Routes.home,
       page: () => const MainPage(),
       transition: Transition.fadeIn,
-      transitionDuration: const Duration(milliseconds: 300),
     ),
     GetPage(
       name: Routes.chatbot,
       page: () => const ChatbotView(),
       binding: ChatbotBinding(),
-      transition: Transition.rightToLeft,
     ),
     GetPage(
       name: Routes.payment,
       page: () => const PaymentView(),
       binding: PaymentBinding(),
-      transition: Transition.downToUp,
     ),
     GetPage(
       name: Routes.chatRoom,
       page: () => const ChatRoomView(),
       binding: ChatRoomBinding(),
-      transition: Transition.rightToLeft,
     ),
     GetPage(
       name: Routes.search,
       page: () => const SearchView(),
       binding: SearchBinding(),
-      transition: Transition.upToDown,
     ),
 
     // =====================
@@ -125,13 +124,11 @@ class AppPages {
       name: Routes.adminDashboard,
       page: () => const AdminDashboardView(),
       binding: AdminDashboardBinding(),
-      transition: Transition.fadeIn,
     ),
     GetPage(
       name: Routes.adminMessages,
       page: () => const AdminMessagesView(),
       binding: AdminMessagesBinding(),
-      transition: Transition.rightToLeft,
     ),
     GetPage(
       name: Routes.adminDataVilla,
@@ -167,6 +164,14 @@ class AppPages {
       name: Routes.ownerProfile,
       page: () => const OwnerProfileView(),
       binding: OwnerProfileBinding(),
+      transition: Transition.rightToLeft,
+    ),
+
+    // 🔥 OWNER – VILLA (INI YANG PENTING)
+    GetPage(
+      name: Routes.ownerVilla,
+      page: () => const OwnerVillaView(),
+      binding: VillaBinding(),
       transition: Transition.rightToLeft,
     ),
   ];

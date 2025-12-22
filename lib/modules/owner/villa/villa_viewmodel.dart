@@ -1,15 +1,19 @@
 import 'dart:async';
 import 'dart:io';
+import 'dart:convert';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/foundation.dart';
 import 'package:get/get.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:http/http.dart' as http;
 import 'package:utp_flutter/app_session.dart';
+import 'package:utp_flutter/modules/owner/villa/villa_repository.dart';
 
-/// Model untuk dokumen villa di Firestore
+/// =======================
+/// MODEL VILLA
+/// =======================
 class OwnerVilla {
   final String id;
   final String name;
@@ -47,17 +51,16 @@ class OwnerVilla {
 
   factory OwnerVilla.fromDoc(DocumentSnapshot doc) {
     final data = doc.data() as Map<String, dynamic>? ?? {};
-
     return OwnerVilla(
       id: doc.id,
       name: data['name'] ?? '',
       description: data['description'] ?? '',
-      capacity: (data['capacity'] ?? 0) as int,
-      maxPerson: (data['max_person'] ?? 0) as int,
-      weekdayPrice: (data['weekday_price'] ?? 0) as int,
-      weekendPrice: (data['weekend_price'] ?? 0) as int,
-      lat: (data['lat'] as num?)?.toDouble() ?? 0.0,
-      lng: (data['lng'] as num?)?.toDouble() ?? 0.0,
+      capacity: data['capacity'] ?? 0,
+      maxPerson: data['max_person'] ?? 0,
+      weekdayPrice: data['weekday_price'] ?? 0,
+      weekendPrice: data['weekend_price'] ?? 0,
+      lat: (data['lat'] as num?)?.toDouble() ?? 0,
+      lng: (data['lng'] as num?)?.toDouble() ?? 0,
       location: data['location'] ?? '',
       mapsLink: data['maps_link'] ?? '',
       images: List<String>.from(data['images'] ?? []),
@@ -68,9 +71,13 @@ class OwnerVilla {
   }
 }
 
+/// =======================
+/// VIEWMODEL
+/// =======================
 class OwnerVillaViewModel extends GetxController {
-  final _db = FirebaseFirestore.instance;
-  final _supabase = Supabase.instance.client;
+  final FirebaseFirestore _db = FirebaseFirestore.instance;
+
+  static const String _baseUrl = 'http://localhost:3000';
 
   final isLoading = false.obs;
   final errorMessage = RxnString();
@@ -78,12 +85,8 @@ class OwnerVillaViewModel extends GetxController {
 
   StreamSubscription<QuerySnapshot>? _subscription;
 
-  /// Ambil ID owner:
-  /// 1. AppSession.userDocId (kalau ada)
-  /// 2. Fallback: FirebaseAuth.currentUser?.uid
-  String? get _currentOwnerId {
-    return AppSession.userDocId ?? FirebaseAuth.instance.currentUser?.uid;
-  }
+  String? get _ownerId =>
+      AppSession.userDocId ?? FirebaseAuth.instance.currentUser?.uid;
 
   @override
   void onInit() {
@@ -91,17 +94,12 @@ class OwnerVillaViewModel extends GetxController {
     _listenVillas();
   }
 
-  /// Dengarkan perubahan data villa milik owner saat ini
+  /// =======================
+  /// LISTEN DATA VILLA OWNER
+  /// =======================
   void _listenVillas() {
-    final ownerId = _currentOwnerId;
-
-    if (ownerId == null) {
-      errorMessage.value = 'Silakan login sebagai owner.';
-      return;
-    }
-
-    isLoading.value = true;
-    errorMessage.value = null;
+    final ownerId = _ownerId;
+    if (ownerId == null) return;
 
     _subscription?.cancel();
 
@@ -110,74 +108,68 @@ class OwnerVillaViewModel extends GetxController {
         .where('owner_id', isEqualTo: ownerId)
         .orderBy('created_at', descending: true)
         .snapshots()
-        .listen(
-      (snapshot) {
-        final items = snapshot.docs.map(OwnerVilla.fromDoc).toList();
-        villas.assignAll(items);
-        isLoading.value = false;
-      },
-      onError: (e) {
-        errorMessage.value = e.toString();
-        isLoading.value = false;
-      },
-    );
+        .listen((snapshot) {
+      villas.assignAll(snapshot.docs.map(OwnerVilla.fromDoc).toList());
+    });
   }
 
-  /// Upload file-file yang sudah dipilih (foto & video) ke bucket "villas"
-  /// Dipanggil SAAT tombol "Simpan Villa" ditekan, baik tambah maupun edit.
+  /// =======================
+  /// UPLOAD FILE → BACKEND
+  /// =======================
   Future<Map<String, List<String>>> uploadVillaFiles(
-    List<PlatformFile> selectedFiles,
+    List<PlatformFile> files,
+    String villaId,
   ) async {
-    final ownerId = _currentOwnerId;
-    if (ownerId == null) {
-      Get.snackbar('Gagal', 'Owner tidak ditemukan. Silakan login ulang.');
-      return {'images': [], 'videos': []};
-    }
+    final ownerId = _ownerId;
+    if (ownerId == null) throw 'Owner tidak ditemukan';
 
-    final imageUrls = <String>[];
-    final videoUrls = <String>[];
+    final images = <String>[];
+    final videos = <String>[];
 
-    for (final file in selectedFiles) {
-      final ext = (file.extension ?? '').toLowerCase();
-      final fileName =
-          '${DateTime.now().millisecondsSinceEpoch}_${file.name}';
-      final storagePath = 'villas/$ownerId/$fileName';
+    for (final file in files) {
+      final request = http.MultipartRequest(
+        'POST',
+        Uri.parse('$_baseUrl/upload/villa'),
+      )
+        ..fields['ownerId'] = ownerId
+        ..fields['villaId'] = villaId;
 
       if (kIsWeb) {
-        // WEB: pakai bytes + uploadBinary
-        final bytes = file.bytes;
-        if (bytes == null) continue;
-
-        await _supabase.storage
-            .from('villas')
-            .uploadBinary(storagePath, bytes);
+        request.files.add(
+          http.MultipartFile.fromBytes(
+            'image',
+            file.bytes!,
+            filename: file.name,
+          ),
+        );
       } else {
-        // MOBILE / DESKTOP: pakai File(path)
-        final path = file.path;
-        if (path == null) continue;
-
-        await _supabase.storage
-            .from('villas')
-            .upload(storagePath, File(path));
+        request.files.add(
+          await http.MultipartFile.fromPath(
+            'image',
+            file.path!,
+          ),
+        );
       }
 
-      final publicUrl =
-          _supabase.storage.from('villas').getPublicUrl(storagePath);
+      final response = await request.send();
+      final body = await response.stream.bytesToString();
 
-      if (ext == 'mp4') {
-        videoUrls.add(publicUrl);
-      } else {
-        imageUrls.add(publicUrl);
+      if (response.statusCode != 200) {
+        throw body;
       }
+
+      final json = jsonDecode(body);
+      final url = json['url'] as String;
+
+      (file.extension == 'mp4' ? videos : images).add(url);
     }
 
-    return {
-      'images': imageUrls,
-      'videos': videoUrls,
-    };
+    return {'images': images, 'videos': videos};
   }
 
-  /// Tambah villa baru ke collection `villas`
+  /// =======================
+  /// ADD VILLA
+  /// =======================
   Future<void> addVilla({
     required String name,
     required String description,
@@ -190,20 +182,18 @@ class OwnerVillaViewModel extends GetxController {
     required double lng,
     required String mapsLink,
     required List<String> facilities,
-    required List<String> images,
-    required List<String> videos,
+    required List<PlatformFile> files,
   }) async {
-    final ownerId = _currentOwnerId;
-
-    if (ownerId == null) {
-      Get.snackbar('Gagal', 'Owner tidak ditemukan. Silakan login ulang.');
-      return;
-    }
+    final ownerId = _ownerId;
+    if (ownerId == null) return;
 
     try {
       isLoading.value = true;
 
-      await _db.collection('villas').add({
+      final villaRef = _db.collection('villas').doc();
+      final media = await uploadVillaFiles(files, villaRef.id);
+
+      await villaRef.set({
         'name': name,
         'description': description,
         'capacity': capacity,
@@ -213,23 +203,29 @@ class OwnerVillaViewModel extends GetxController {
         'location': location,
         'lat': lat,
         'lng': lng,
-        'facilities': facilities,
-        'images': images,
-        'videos': videos,
         'maps_link': mapsLink,
+        'facilities': facilities,
+        'images': media['images'],
+        'videos': media['videos'],
         'owner_id': ownerId,
         'created_at': FieldValue.serverTimestamp(),
       });
 
-      Get.snackbar('Berhasil', 'Villa berhasil ditambahkan.');
-    } catch (e) {
-      Get.snackbar('Error', e.toString());
+      Get.snackbar('Berhasil', 'Villa berhasil ditambahkan');
     } finally {
       isLoading.value = false;
     }
   }
 
-  /// Update villa yang sudah ada
+  @override
+  void onClose() {
+    _subscription?.cancel();
+    super.onClose();
+  }
+
+  /// =======================
+  /// UPDATE VILLA (FIXED)
+  /// =======================
   Future<void> updateVilla({
     required String id,
     required String name,
@@ -259,34 +255,52 @@ class OwnerVillaViewModel extends GetxController {
         'location': location,
         'lat': lat,
         'lng': lng,
+        'maps_link': mapsLink,
         'facilities': facilities,
         'images': images,
         'videos': videos,
-        'maps_link': mapsLink,
         'updated_at': FieldValue.serverTimestamp(),
       });
 
-      Get.snackbar('Berhasil', 'Villa berhasil diperbarui.');
+      Get.snackbar(
+        'Berhasil',
+        'Villa berhasil diperbarui',
+        snackPosition: SnackPosition.BOTTOM,
+      );
     } catch (e) {
-      Get.snackbar('Error', e.toString());
+      Get.snackbar(
+        'Error',
+        e.toString(),
+        snackPosition: SnackPosition.BOTTOM,
+      );
+      rethrow;
     } finally {
       isLoading.value = false;
     }
   }
 
-  /// Hapus villa berdasarkan doc id
+  /// =======================
+  /// DELETE VILLA
+  /// =======================
   Future<void> deleteVilla(String id) async {
     try {
-      await _db.collection('villas').doc(id).delete();
-      Get.snackbar('Berhasil', 'Villa berhasil dihapus.');
-    } catch (e) {
-      Get.snackbar('Error', e.toString());
-    }
-  }
+      isLoading.value = true;
 
-  @override
-  void onClose() {
-    _subscription?.cancel();
-    super.onClose();
+      await _db.collection('villas').doc(id).delete();
+
+      Get.snackbar(
+        'Berhasil',
+        'Villa berhasil dihapus',
+        snackPosition: SnackPosition.BOTTOM,
+      );
+    } catch (e) {
+      Get.snackbar(
+        'Error',
+        e.toString(),
+        snackPosition: SnackPosition.BOTTOM,
+      );
+    } finally {
+      isLoading.value = false;
+    }
   }
 }

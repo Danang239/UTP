@@ -36,7 +36,20 @@ Future<void> main() async {
     anonKey:
         'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF2enR4a2tiZWZmdHZvZHVpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQzOTMzMjUsImV4cCI6MjA3OTk2OTMyNX0.liN7spnWnbKUXsKPS6IgbN5z09AR0gD61bwpLoi5aTE',
   );
+  // =========================
+  // 🔎 TEST SUPABASE STORAGE (SEMENTARA)
+  // =========================
+  try {
+    final list = await Supabase.instance.client.storage
+        .from('profile')
+        .list();
+    print('SUPABASE STORAGE OK: $list');
+  } catch (e) {
+    print('SUPABASE STORAGE ERROR: $e');
+  }
+  // =========================
 
+  runApp(const MyApp());
   // =====================
   // FIREBASE
   // =====================

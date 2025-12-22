@@ -3,6 +3,7 @@ import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 import 'package:utp_flutter/app_session.dart';
 import 'package:utp_flutter/modules/user/profile/profile_viewmodel.dart';
@@ -26,9 +27,11 @@ class EditProfileViewModel extends GetxController {
   // STATE
   // =====================
   final isLoading = false.obs;
+
+  /// ✅ SATU-SATUNYA FORMAT GAMBAR (WEB + MOBILE)
   final imageBytes = Rx<Uint8List?>(null);
 
-  /// 🔑 SATU SUMBER KEBENARAN UID (Firestore doc id)
+  /// 🔑 SATU SUMBER KEBENARAN UID
   String get uid {
     final id = AppSession.userDocId;
     if (id == null || id.isEmpty) {
@@ -57,18 +60,18 @@ class EditProfileViewModel extends GetxController {
   }
 
   // =====================
-  // PICK IMAGE
+  // PICK IMAGE (WEB + MOBILE)
   // =====================
   Future<void> pickImage() async {
     try {
       final picker = ImagePicker();
-      final XFile? file = await picker.pickImage(
+      final XFile? picked = await picker.pickImage(
         source: ImageSource.gallery,
         imageQuality: 75,
       );
 
-      if (file != null) {
-        imageBytes.value = await file.readAsBytes();
+      if (picked != null) {
+        imageBytes.value = await picked.readAsBytes();
       }
     } catch (e) {
       Get.snackbar('Error', 'Gagal memilih foto');
@@ -76,7 +79,7 @@ class EditProfileViewModel extends GetxController {
   }
 
   // =====================
-  // SAVE PROFILE (FINAL & STABLE)
+  // SAVE PROFILE
   // =====================
   Future<void> save() async {
     if (isLoading.value) return;
@@ -97,7 +100,8 @@ class EditProfileViewModel extends GetxController {
       if (imageBytes.value != null) {
         photoUrl = await repo.uploadProfileImage(
           userId: uid,
-          bytes: imageBytes.value!,
+          role: AppSession.role ?? 'user',
+          bytes: imageBytes.value!, // 🔥 FIX UTAMA
         );
       }
 
@@ -106,9 +110,8 @@ class EditProfileViewModel extends GetxController {
       // =====================
       final updateData = <String, dynamic>{
         'name': name,
-        'email': email,
         if (photoUrl != null) 'profile_img': photoUrl,
-        'updated_at': DateTime.now(),
+        'updated_at': FieldValue.serverTimestamp(),
       };
 
       await repo.updateUserProfile(userId: uid, data: updateData);
@@ -117,7 +120,6 @@ class EditProfileViewModel extends GetxController {
       // UPDATE SESSION
       // =====================
       AppSession.name = name;
-      AppSession.email = email;
       if (photoUrl != null) {
         AppSession.profileImg = photoUrl;
       }
@@ -129,9 +131,6 @@ class EditProfileViewModel extends GetxController {
         Get.find<ProfileViewModel>().refreshFromSession();
       }
 
-      // =====================
-      // BACK TO PROFILE
-      // =====================
       Get.back(result: true);
       Get.snackbar('Berhasil', 'Profil berhasil diperbarui');
     } catch (e) {

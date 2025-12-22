@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 import 'profile_viewmodel.dart';
 
@@ -31,7 +32,9 @@ class OwnerEditProfileView extends GetView<OwnerProfileViewModel> {
                   children: [
                     const SizedBox(height: 8),
 
-                    // AVATAR + BUTTON GANTI FOTO
+                    // ======================
+                    // AVATAR + GANTI FOTO
+                    // ======================
                     Center(
                       child: Stack(
                         children: [
@@ -40,7 +43,9 @@ class OwnerEditProfileView extends GetView<OwnerProfileViewModel> {
                             backgroundColor: Colors.grey[300],
                             backgroundImage:
                                 controller.profileImg.value.isNotEmpty
-                                    ? NetworkImage(controller.profileImg.value)
+                                    ? NetworkImage(
+                                        controller.profileImg.value,
+                                      )
                                     : null,
                             child: controller.profileImg.value.isEmpty
                                 ? const Icon(
@@ -82,7 +87,9 @@ class OwnerEditProfileView extends GetView<OwnerProfileViewModel> {
 
                     const SizedBox(height: 24),
 
-                    // CARD DATA PROFILE (FORM LAMA DIPAKAI LAGI)
+                    // ======================
+                    // FORM PROFILE
+                    // ======================
                     _ProfileFormCard(controller: controller),
 
                     const SizedBox(height: 24),
@@ -105,7 +112,9 @@ class OwnerEditProfileView extends GetView<OwnerProfileViewModel> {
   }
 }
 
-/// Card berisi form editable (nama & no HP)
+/// =======================================================
+/// CARD FORM EDIT PROFILE
+/// =======================================================
 class _ProfileFormCard extends StatefulWidget {
   final OwnerProfileViewModel controller;
 
@@ -118,26 +127,28 @@ class _ProfileFormCard extends StatefulWidget {
 class _ProfileFormCardState extends State<_ProfileFormCard> {
   late final TextEditingController nameC;
   late final TextEditingController phoneC;
+  late final TextEditingController passwordC;
+  late final TextEditingController confirmPasswordC;
 
   @override
   void initState() {
     super.initState();
     nameC = TextEditingController(text: widget.controller.name.value);
     phoneC = TextEditingController(text: widget.controller.phone.value);
+    passwordC = TextEditingController();
+    confirmPasswordC = TextEditingController();
 
     // sinkron dengan perubahan di controller
-    ever<String>(widget.controller.name, (v) {
-      nameC.text = v;
-    });
-    ever<String>(widget.controller.phone, (v) {
-      phoneC.text = v;
-    });
+    ever<String>(widget.controller.name, (v) => nameC.text = v);
+    ever<String>(widget.controller.phone, (v) => phoneC.text = v);
   }
 
   @override
   void dispose() {
     nameC.dispose();
     phoneC.dispose();
+    passwordC.dispose();
+    confirmPasswordC.dispose();
     super.dispose();
   }
 
@@ -158,6 +169,7 @@ class _ProfileFormCardState extends State<_ProfileFormCard> {
               icon: Icons.person_outline,
             ),
             const SizedBox(height: 12),
+
             Obx(
               () => _readOnlyField(
                 label: 'Email',
@@ -165,14 +177,39 @@ class _ProfileFormCardState extends State<_ProfileFormCard> {
                 icon: Icons.email_outlined,
               ),
             ),
+
             const SizedBox(height: 12),
+
             _textField(
               controller: phoneC,
               label: 'Nomor Telepon',
               icon: Icons.phone_outlined,
               keyboardType: TextInputType.phone,
             ),
-            const SizedBox(height: 18),
+
+            const SizedBox(height: 16),
+
+            // ======================
+            // PASSWORD BARU (OPSIONAL)
+            // ======================
+            _textField(
+              controller: passwordC,
+              label: 'Password Baru (opsional)',
+              icon: Icons.lock_outline,
+              obscure: true,
+            ),
+
+            const SizedBox(height: 12),
+
+            _textField(
+              controller: confirmPasswordC,
+              label: 'Konfirmasi Password',
+              icon: Icons.lock_reset,
+              obscure: true,
+            ),
+
+            const SizedBox(height: 20),
+
             SizedBox(
               width: double.infinity,
               child: OutlinedButton.icon(
@@ -184,12 +221,7 @@ class _ProfileFormCardState extends State<_ProfileFormCard> {
                 ),
                 icon: const Icon(Icons.save_outlined),
                 label: const Text('Simpan Perubahan'),
-                onPressed: () {
-                  widget.controller.updateProfile(
-                    newName: nameC.text.trim(),
-                    newPhone: phoneC.text.trim(),
-                  );
-                },
+                onPressed: _onSavePressed,
               ),
             ),
           ],
@@ -198,15 +230,68 @@ class _ProfileFormCardState extends State<_ProfileFormCard> {
     );
   }
 
+  // ===================================================
+  // ACTION SIMPAN
+  // ===================================================
+  Future<void> _onSavePressed() async {
+    final newName = nameC.text.trim();
+    final newPhone = phoneC.text.trim();
+    final newPassword = passwordC.text.trim();
+    final confirmPassword = confirmPasswordC.text.trim();
+
+    if (newName.isEmpty || newPhone.isEmpty) {
+      Get.snackbar('Validasi', 'Nama dan nomor HP wajib diisi');
+      return;
+    }
+
+    // ======================
+    // GANTI PASSWORD (OPSIONAL)
+    // ======================
+    if (newPassword.isNotEmpty) {
+      if (newPassword.length < 6) {
+        Get.snackbar('Error', 'Password minimal 6 karakter');
+        return;
+      }
+      if (newPassword != confirmPassword) {
+        Get.snackbar('Error', 'Konfirmasi password tidak cocok');
+        return;
+      }
+
+      try {
+        await FirebaseAuth.instance.currentUser!
+            .updatePassword(newPassword);
+      } catch (e) {
+        Get.snackbar(
+          'Error',
+          'Gagal mengganti password, silakan login ulang',
+        );
+        return;
+      }
+    }
+
+    // ======================
+    // UPDATE NAMA & PHONE
+    // ======================
+    await widget.controller.updateProfile(
+      newName: newName,
+      newPhone: newPhone,
+    );
+  }
+
+  // ===================================================
+  // WIDGET HELPER
+  // ===================================================
   Widget _textField({
     required TextEditingController controller,
     required String label,
     required IconData icon,
     TextInputType keyboardType = TextInputType.text,
+    bool obscure = false,
   }) {
     return TextField(
       controller: controller,
       keyboardType: keyboardType,
+      obscureText: obscure,
       decoration: InputDecoration(
         prefixIcon: Icon(icon),
         labelText: label,

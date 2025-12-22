@@ -65,10 +65,7 @@ class OwnerVillaView extends GetView<OwnerVillaViewModel> {
                         width: 60,
                         height: 60,
                         child: v.images.isNotEmpty
-                            ? Image.network(
-                                v.images.first,
-                                fit: BoxFit.cover,
-                              )
+                            ? Image.network(v.images.first, fit: BoxFit.cover)
                             : Container(
                                 color: Colors.grey[200],
                                 child: const Icon(Icons.home_work_outlined),
@@ -77,9 +74,7 @@ class OwnerVillaView extends GetView<OwnerVillaViewModel> {
                     ),
                     title: Text(
                       v.name,
-                      style: const TextStyle(
-                        fontWeight: FontWeight.bold,
-                      ),
+                      style: const TextStyle(fontWeight: FontWeight.bold),
                     ),
                     subtitle: Padding(
                       padding: const EdgeInsets.only(top: 4),
@@ -120,10 +115,7 @@ class OwnerVillaView extends GetView<OwnerVillaViewModel> {
 
   void _openAddVillaForm() {
     Get.bottomSheet(
-      _VillaFormSheet(
-        controller: controller,
-        initialVilla: null,
-      ),
+      _VillaFormSheet(controller: controller, initialVilla: null),
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
     );
@@ -135,10 +127,7 @@ class OwnerVillaView extends GetView<OwnerVillaViewModel> {
 
   void _openEditVillaForm(OwnerVilla villa) {
     Get.bottomSheet(
-      _VillaFormSheet(
-        controller: controller,
-        initialVilla: villa,
-      ),
+      _VillaFormSheet(controller: controller, initialVilla: villa),
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
     );
@@ -153,10 +142,7 @@ class _VillaFormSheet extends StatefulWidget {
   final OwnerVillaViewModel controller;
   final OwnerVilla? initialVilla; // null = tambah, != null = edit
 
-  const _VillaFormSheet({
-    required this.controller,
-    this.initialVilla,
-  });
+  const _VillaFormSheet({required this.controller, this.initialVilla});
 
   bool get isEdit => initialVilla != null;
 
@@ -190,14 +176,18 @@ class _VillaFormSheetState extends State<_VillaFormSheet> {
     final v = widget.initialVilla;
     nameC = TextEditingController(text: v?.name ?? '');
     descC = TextEditingController(text: v?.description ?? '');
-    capacityC =
-        TextEditingController(text: v != null ? v.capacity.toString() : '');
-    maxPersonC =
-        TextEditingController(text: v != null ? v.maxPerson.toString() : '');
-    weekdayC =
-        TextEditingController(text: v != null ? v.weekdayPrice.toString() : '');
-    weekendC =
-        TextEditingController(text: v != null ? v.weekendPrice.toString() : '');
+    capacityC = TextEditingController(
+      text: v != null ? v.capacity.toString() : '',
+    );
+    maxPersonC = TextEditingController(
+      text: v != null ? v.maxPerson.toString() : '',
+    );
+    weekdayC = TextEditingController(
+      text: v != null ? v.weekdayPrice.toString() : '',
+    );
+    weekendC = TextEditingController(
+      text: v != null ? v.weekendPrice.toString() : '',
+    );
     locationC = TextEditingController(text: v?.location ?? '');
     mapsLinkC = TextEditingController(text: v?.mapsLink ?? '');
     latC = TextEditingController(text: v != null ? v.lat.toString() : '');
@@ -246,8 +236,7 @@ class _VillaFormSheetState extends State<_VillaFormSheet> {
             ],
           ),
           child: ClipRRect(
-            borderRadius:
-                const BorderRadius.vertical(top: Radius.circular(24)),
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
             child: Container(
               // glassmorphism effect
               decoration: BoxDecoration(
@@ -289,10 +278,7 @@ class _VillaFormSheetState extends State<_VillaFormSheet> {
                         padding: const EdgeInsets.all(14),
                         decoration: BoxDecoration(
                           gradient: const LinearGradient(
-                            colors: [
-                              Color(0xFF0f3440),
-                              Color(0xFF13525f),
-                            ],
+                            colors: [Color(0xFF0f3440), Color(0xFF13525f)],
                           ),
                           borderRadius: BorderRadius.circular(18),
                           boxShadow: [
@@ -305,8 +291,10 @@ class _VillaFormSheetState extends State<_VillaFormSheet> {
                         ),
                         child: Row(
                           children: [
-                            const Icon(Icons.home_work_outlined,
-                                color: Colors.white),
+                            const Icon(
+                              Icons.home_work_outlined,
+                              color: Colors.white,
+                            ),
                             const SizedBox(width: 10),
                             Expanded(
                               child: Text(
@@ -323,7 +311,9 @@ class _VillaFormSheetState extends State<_VillaFormSheet> {
                                 label: Text(
                                   'EDIT',
                                   style: TextStyle(
-                                      color: Colors.white, fontSize: 11),
+                                    color: Colors.white,
+                                    fontSize: 11,
+                                  ),
                                 ),
                                 backgroundColor: Colors.white24,
                               )
@@ -332,7 +322,9 @@ class _VillaFormSheetState extends State<_VillaFormSheet> {
                                 label: Text(
                                   'BARU',
                                   style: TextStyle(
-                                      color: Colors.white, fontSize: 11),
+                                    color: Colors.white,
+                                    fontSize: 11,
+                                  ),
                                 ),
                                 backgroundColor: Colors.white24,
                               ),
@@ -498,27 +490,26 @@ class _VillaFormSheetState extends State<_VillaFormSheet> {
           ),
           const SizedBox(height: 6),
           ...existingVideos.asMap().entries.map(
-                (e) => ListTile(
-                  dense: true,
-                  contentPadding: EdgeInsets.zero,
-                  leading: const Icon(Icons.videocam),
-                  title: Text(
-                    e.value,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style:
-                        const TextStyle(fontSize: 12, color: Colors.black54),
-                  ),
-                  trailing: IconButton(
-                    icon: const Icon(Icons.close, size: 18),
-                    onPressed: () {
-                      setState(() {
-                        existingVideos.removeAt(e.key);
-                      });
-                    },
-                  ),
-                ),
+            (e) => ListTile(
+              dense: true,
+              contentPadding: EdgeInsets.zero,
+              leading: const Icon(Icons.videocam),
+              title: Text(
+                e.value,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(fontSize: 12, color: Colors.black54),
               ),
+              trailing: IconButton(
+                icon: const Icon(Icons.close, size: 18),
+                onPressed: () {
+                  setState(() {
+                    existingVideos.removeAt(e.key);
+                  });
+                },
+              ),
+            ),
+          ),
           const SizedBox(height: 10),
         ],
 
@@ -551,118 +542,113 @@ class _VillaFormSheetState extends State<_VillaFormSheet> {
           const SizedBox(height: 6),
 
           // foto baru
-          if (newFiles
-              .any((f) => (f.extension ?? '').toLowerCase() != 'mp4'))
+          if (newFiles.any((f) => (f.extension ?? '').toLowerCase() != 'mp4'))
             SizedBox(
               height: 90,
               child: ListView(
                 scrollDirection: Axis.horizontal,
                 children: newFiles
-                    .where(
-                        (f) => (f.extension ?? '').toLowerCase() != 'mp4')
+                    .where((f) => (f.extension ?? '').toLowerCase() != 'mp4')
                     .toList()
                     .asMap()
                     .entries
-                    .map(
-                  (entry) {
-                    final index = entry.key;
-                    final file = entry.value;
-                    return Padding(
-                      padding: const EdgeInsets.only(right: 8),
-                      child: Stack(
-                        children: [
-                          ClipRRect(
-                            borderRadius: BorderRadius.circular(10),
-                            child: file.bytes != null
-                                ? Image.memory(
-                                    file.bytes!,
-                                    width: 130,
-                                    height: 90,
-                                    fit: BoxFit.cover,
-                                  )
-                                : Container(
-                                    width: 130,
-                                    height: 90,
-                                    color: Colors.grey[300],
-                                    child: const Icon(Icons.image),
+                    .map((entry) {
+                      final index = entry.key;
+                      final file = entry.value;
+                      return Padding(
+                        padding: const EdgeInsets.only(right: 8),
+                        child: Stack(
+                          children: [
+                            ClipRRect(
+                              borderRadius: BorderRadius.circular(10),
+                              child: file.bytes != null
+                                  ? Image.memory(
+                                      file.bytes!,
+                                      width: 130,
+                                      height: 90,
+                                      fit: BoxFit.cover,
+                                    )
+                                  : Container(
+                                      width: 130,
+                                      height: 90,
+                                      color: Colors.grey[300],
+                                      child: const Icon(Icons.image),
+                                    ),
+                            ),
+                            Positioned(
+                              top: 4,
+                              right: 4,
+                              child: InkWell(
+                                onTap: () {
+                                  setState(() {
+                                    newFiles.removeAt(index);
+                                  });
+                                },
+                                child: Container(
+                                  padding: const EdgeInsets.all(2),
+                                  decoration: BoxDecoration(
+                                    color: Colors.black.withOpacity(0.55),
+                                    shape: BoxShape.circle,
                                   ),
-                          ),
-                          Positioned(
-                            top: 4,
-                            right: 4,
-                            child: InkWell(
-                              onTap: () {
-                                setState(() {
-                                  newFiles.removeAt(index);
-                                });
-                              },
-                              child: Container(
-                                padding: const EdgeInsets.all(2),
-                                decoration: BoxDecoration(
-                                  color: Colors.black.withOpacity(0.55),
-                                  shape: BoxShape.circle,
-                                ),
-                                child: const Icon(
-                                  Icons.close,
-                                  size: 16,
-                                  color: Colors.white,
+                                  child: const Icon(
+                                    Icons.close,
+                                    size: 16,
+                                    color: Colors.white,
+                                  ),
                                 ),
                               ),
                             ),
-                          ),
-                        ],
-                      ),
-                    );
-                  },
-                ).toList(),
+                          ],
+                        ),
+                      );
+                    })
+                    .toList(),
               ),
             ),
 
           // video baru
-          if (newFiles
-              .any((f) => (f.extension ?? '').toLowerCase() == 'mp4')) ...[
+          if (newFiles.any(
+            (f) => (f.extension ?? '').toLowerCase() == 'mp4',
+          )) ...[
             const SizedBox(height: 6),
             ...newFiles
                 .where((f) => (f.extension ?? '').toLowerCase() == 'mp4')
                 .toList()
                 .asMap()
                 .entries
-                .map(
-              (entry) {
-                final index = entry.key;
-                final file = entry.value;
-                return ListTile(
-                  dense: true,
-                  contentPadding: EdgeInsets.zero,
-                  leading: const Icon(Icons.videocam),
-                  title: Text(
-                    file.name,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style:
-                        const TextStyle(fontSize: 12, color: Colors.black54),
-                  ),
-                  trailing: IconButton(
-                    icon: const Icon(Icons.close, size: 18),
-                    onPressed: () {
-                      setState(() {
-                        newFiles.removeAt(index);
-                      });
-                    },
-                  ),
-                );
-              },
-            ),
+                .map((entry) {
+                  final index = entry.key;
+                  final file = entry.value;
+                  return ListTile(
+                    dense: true,
+                    contentPadding: EdgeInsets.zero,
+                    leading: const Icon(Icons.videocam),
+                    title: Text(
+                      file.name,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        fontSize: 12,
+                        color: Colors.black54,
+                      ),
+                    ),
+                    trailing: IconButton(
+                      icon: const Icon(Icons.close, size: 18),
+                      onPressed: () {
+                        setState(() {
+                          newFiles.removeAt(index);
+                        });
+                      },
+                    ),
+                  );
+                }),
           ],
           const SizedBox(height: 10),
         ],
 
         const SizedBox(height: 8),
 
-        const Text(
-          'Fasilitas',
-          style: TextStyle(fontWeight: FontWeight.bold),
-        ),
+        const Text('Fasilitas', style: TextStyle(fontWeight: FontWeight.bold)),
         const SizedBox(height: 4),
 
         Row(
@@ -735,106 +721,116 @@ class _VillaFormSheetState extends State<_VillaFormSheet> {
   }
 
   Future<void> _onSavePressed() async {
-    if (saving) return;
+  if (saving) return;
 
-    final name = nameC.text.trim();
-    final desc = descC.text.trim();
-    final capacity = int.tryParse(capacityC.text.trim()) ?? 0;
-    final maxPerson = int.tryParse(maxPersonC.text.trim()) ?? 0;
-    final weekday = int.tryParse(weekdayC.text.trim()) ?? 0;
-    final weekend = int.tryParse(weekendC.text.trim()) ?? 0;
-    final location = locationC.text.trim();
-    final mapsLink = mapsLinkC.text.trim();
+  final name = nameC.text.trim();
+  final desc = descC.text.trim();
+  final capacity = int.tryParse(capacityC.text.trim()) ?? 0;
+  final maxPerson = int.tryParse(maxPersonC.text.trim()) ?? 0;
+  final weekday = int.tryParse(weekdayC.text.trim()) ?? 0;
+  final weekend = int.tryParse(weekendC.text.trim()) ?? 0;
+  final location = locationC.text.trim();
+  final mapsLink = mapsLinkC.text.trim();
 
-    double lat = double.tryParse(latC.text.trim()) ?? 0.0;
-    double lng = double.tryParse(lngC.text.trim()) ?? 0.0;
+  double lat = double.tryParse(latC.text.trim()) ?? 0.0;
+  double lng = double.tryParse(lngC.text.trim()) ?? 0.0;
 
-    if (lat == 0.0 || lng == 0.0) {
-      final parsed = _parseLatLngFromMapsLink(mapsLink);
-      if (parsed != null) {
-        lat = parsed[0];
-        lng = parsed[1];
-      }
-    }
-
-    if (name.isEmpty ||
-        desc.isEmpty ||
-        capacity <= 0 ||
-        maxPerson <= 0 ||
-        weekday <= 0 ||
-        weekend <= 0 ||
-        mapsLink.isEmpty ||
-        lat == 0.0 ||
-        lng == 0.0) {
-      Get.snackbar(
-        'Validasi',
-        'Harap lengkapi semua field dan pastikan link maps valid.',
-        snackPosition: SnackPosition.BOTTOM,
-      );
-      return;
-    }
-
-    setState(() => saving = true);
-
-    try {
-      // upload file baru
-      Map<String, List<String>> media = {'images': [], 'videos': []};
-      if (newFiles.isNotEmpty) {
-        media = await widget.controller.uploadVillaFiles(newFiles);
-      }
-
-      final allImages = [
-        ...existingImages,
-        ...media['images']!,
-      ];
-      final allVideos = [
-        ...existingVideos,
-        ...media['videos']!,
-      ];
-
-      if (widget.isEdit) {
-        final v = widget.initialVilla!;
-        await widget.controller.updateVilla(
-          id: v.id,
-          name: name,
-          description: desc,
-          capacity: capacity,
-          maxPerson: maxPerson,
-          weekdayPrice: weekday,
-          weekendPrice: weekend,
-          location: location,
-          lat: lat,
-          lng: lng,
-          mapsLink: mapsLink,
-          facilities: facilities,
-          images: allImages,
-          videos: allVideos,
-        );
-      } else {
-        await widget.controller.addVilla(
-          name: name,
-          description: desc,
-          capacity: capacity,
-          maxPerson: maxPerson,
-          weekdayPrice: weekday,
-          weekendPrice: weekend,
-          location: location,
-          lat: lat,
-          lng: lng,
-          mapsLink: mapsLink,
-          facilities: facilities,
-          images: allImages,
-          videos: allVideos,
-        );
-      }
-
-      Get.back(); // tutup form
-    } catch (e) {
-      Get.snackbar('Error', e.toString());
-    } finally {
-      if (mounted) setState(() => saving = false);
+  if (lat == 0.0 || lng == 0.0) {
+    final parsed = _parseLatLngFromMapsLink(mapsLink);
+    if (parsed != null) {
+      lat = parsed[0];
+      lng = parsed[1];
     }
   }
+
+  if (name.isEmpty ||
+      desc.isEmpty ||
+      capacity <= 0 ||
+      maxPerson <= 0 ||
+      weekday <= 0 ||
+      weekend <= 0 ||
+      mapsLink.isEmpty ||
+      lat == 0.0 ||
+      lng == 0.0) {
+    Get.snackbar(
+      'Validasi',
+      'Harap lengkapi semua field dan pastikan link maps valid.',
+      snackPosition: SnackPosition.BOTTOM,
+    );
+    return;
+  }
+
+  setState(() => saving = true);
+
+  try {
+    /// ======================
+    /// UPLOAD FILE BARU (JIKA ADA)
+    /// ======================
+    Map<String, List<String>> media = {'images': [], 'videos': []};
+
+    if (newFiles.isNotEmpty && widget.isEdit) {
+      media = await widget.controller.uploadVillaFiles(
+        newFiles,
+        widget.initialVilla!.id,
+      );
+    }
+
+    final allImages = [...existingImages, ...media['images']!];
+    final allVideos = [...existingVideos, ...media['videos']!];
+
+    /// ======================
+    /// EDIT / TAMBAH
+    /// ======================
+    if (widget.isEdit) {
+      final v = widget.initialVilla!;
+      await widget.controller.updateVilla(
+        id: v.id,
+        name: name,
+        description: desc,
+        capacity: capacity,
+        maxPerson: maxPerson,
+        weekdayPrice: weekday,
+        weekendPrice: weekend,
+        location: location,
+        lat: lat,
+        lng: lng,
+        mapsLink: mapsLink,
+        facilities: facilities,
+        images: allImages,
+        videos: allVideos,
+      );
+    } else {
+      await widget.controller.addVilla(
+        name: name,
+        description: desc,
+        capacity: capacity,
+        maxPerson: maxPerson,
+        weekdayPrice: weekday,
+        weekendPrice: weekend,
+        location: location,
+        lat: lat,
+        lng: lng,
+        mapsLink: mapsLink,
+        facilities: facilities,
+        files: newFiles,
+      );
+    }
+
+    /// ✅ INI YANG PALING PENTING
+    /// TUTUP BOTTOM SHEET & BALIK KE HALAMAN VILLA
+    if (mounted) {
+      Get.back(); // nutup bottom sheet
+    }
+  } catch (e) {
+    Get.snackbar('Error', e.toString());
+  } finally {
+    if (mounted) {
+      setState(() => saving = false);
+    }
+  }
+}
+
+
 
   // ===================================================================
   //                        HELPER WIDGET & UTIL
@@ -852,9 +848,7 @@ class _VillaFormSheetState extends State<_VillaFormSheet> {
         keyboardType: number ? TextInputType.number : TextInputType.text,
         decoration: InputDecoration(
           labelText: label,
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
-          ),
+          border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
           filled: true,
           fillColor: Colors.white,
         ),
@@ -867,8 +861,7 @@ class _VillaFormSheetState extends State<_VillaFormSheet> {
     if (url.isEmpty) return null;
 
     // pola 1: .../@-6.6973834,106.9455604,...
-    final atMatch =
-        RegExp(r'@(-?\d+\.?\d*),\s*(-?\d+\.?\d*)').firstMatch(url);
+    final atMatch = RegExp(r'@(-?\d+\.?\d*),\s*(-?\d+\.?\d*)').firstMatch(url);
     if (atMatch != null) {
       final lat = double.tryParse(atMatch.group(1)!);
       final lng = double.tryParse(atMatch.group(2)!);
@@ -876,8 +869,9 @@ class _VillaFormSheetState extends State<_VillaFormSheet> {
     }
 
     // pola 2: ...?q=-6.6973834,106.9455604...
-    final qMatch =
-        RegExp(r'[?&]q=(-?\d+\.?\d*),\s*(-?\d+\.?\d*)').firstMatch(url);
+    final qMatch = RegExp(
+      r'[?&]q=(-?\d+\.?\d*),\s*(-?\d+\.?\d*)',
+    ).firstMatch(url);
     if (qMatch != null) {
       final lat = double.tryParse(qMatch.group(1)!);
       final lng = double.tryParse(qMatch.group(2)!);

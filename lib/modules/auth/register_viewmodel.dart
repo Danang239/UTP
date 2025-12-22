@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:utp_flutter/app_session.dart';
-import 'package:utp_flutter/main.dart';
 import 'package:utp_flutter/modules/user/main/main_page.dart';
 
 class RegisterViewModel extends GetxController {
@@ -69,7 +68,7 @@ class RegisterViewModel extends GetxController {
 
     try {
       // =====================
-      // 1️⃣ CREATE FIREBASE AUTH
+      // 1️⃣ FIREBASE AUTH
       // =====================
       final UserCredential credential =
           await _auth.createUserWithEmailAndPassword(
@@ -77,18 +76,21 @@ class RegisterViewModel extends GetxController {
         password: password,
       );
 
-      final User user = credential.user!;
+      final User? user = credential.user;
+      if (user == null) {
+        throw Exception('Registrasi gagal, user tidak ditemukan');
+      }
+
       final String uid = user.uid;
 
       // =====================
-      // 2️⃣ SIMPAN KE FIRESTORE
-      // ROLE FIXED = user
+      // 2️⃣ FIRESTORE USER DATA
       // =====================
       await _usersRef.doc(uid).set({
         'name': name,
         'phone': phone,
         'email': email,
-        'role': 'user', // 🔥 FIXED
+        'role': 'user',
         'profile_img': '',
         'created_at': FieldValue.serverTimestamp(),
         'updated_at': FieldValue.serverTimestamp(),
@@ -96,7 +98,7 @@ class RegisterViewModel extends GetxController {
       });
 
       // =====================
-      // 3️⃣ SIMPAN SESSION (🔥 FIX UTAMA)
+      // 3️⃣ SESSION
       // =====================
       final bool ok = await AppSession.saveUserFromUid(uid);
       if (!ok) {
@@ -104,7 +106,7 @@ class RegisterViewModel extends GetxController {
       }
 
       // =====================
-      // 4️⃣ MASUK KE MAIN PAGE
+      // 4️⃣ NAVIGASI
       // =====================
       Get.offAll(() => const MainPage());
     } on FirebaseAuthException catch (e) {
@@ -118,7 +120,8 @@ class RegisterViewModel extends GetxController {
         errorMessage.value = e.message;
       }
     } catch (e) {
-      errorMessage.value = 'Terjadi kesalahan: $e';
+      debugPrint('Register error: $e');
+      errorMessage.value = 'Terjadi kesalahan, silakan coba lagi.';
     } finally {
       isLoading.value = false;
     }

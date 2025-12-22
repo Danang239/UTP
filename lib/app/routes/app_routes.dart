@@ -1,3 +1,4 @@
+// lib/app/routes/app_routes.dart
 abstract class Routes {
   Routes._();
 
@@ -42,4 +43,7 @@ abstract class Routes {
   // =====================
   static const ownerDashboard = '/owner-dashboard';
   static const ownerProfile = '/owner-profile';
+
+  // 🔥 OWNER - VILLA (WAJIB ADA)
+  static const ownerVilla = '/owner-villa';
 }
