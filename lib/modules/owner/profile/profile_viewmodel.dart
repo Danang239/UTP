@@ -1,5 +1,4 @@
 import 'dart:convert';
-import 'dart:typed_data';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -63,7 +62,6 @@ class OwnerProfileViewModel extends GetxController {
       phone.value = data['phone'] ?? '';
       profileImg.value = data['profile_img'] ?? '';
 
-      // sync ke session
       AppSession.name = name.value;
       AppSession.email = email.value;
       AppSession.phone = phone.value;
@@ -74,7 +72,7 @@ class OwnerProfileViewModel extends GetxController {
   }
 
   // ============================
-  // UPDATE NAMA & PHONE
+  // UPDATE NAMA & PHONE (LAMA)
   // ============================
   Future<void> updateProfile({
     required String newName,
@@ -102,6 +100,22 @@ class OwnerProfileViewModel extends GetxController {
     } finally {
       isLoading.value = false;
     }
+  }
+
+  // ============================
+  // 🔥 UPDATE + KEMBALI KE PROFILE
+  // ============================
+  Future<void> updateProfileAndBack({
+    required String newName,
+    required String newPhone,
+  }) async {
+    await updateProfile(
+      newName: newName,
+      newPhone: newPhone,
+    );
+
+    // 👉 langsung kembali ke halaman profile owner
+    Get.offNamed('/owner-profile');
   }
 
   // ============================
@@ -189,20 +203,17 @@ class OwnerProfileViewModel extends GetxController {
 
     isLoading.value = true;
     try {
-      // 🔐 re-authentication wajib
       final credential = EmailAuthProvider.credential(
         email: user.email!,
         password: oldPassword,
       );
 
       await user.reauthenticateWithCredential(credential);
-
-      // update password
       await user.updatePassword(newPassword);
 
       Get.snackbar(
         'Berhasil',
-        'Password berhasil diubah. Silakan login ulang jika diminta.',
+        'Password berhasil diubah',
       );
     } on FirebaseAuthException catch (e) {
       Get.snackbar('Error', e.message ?? 'Gagal mengubah password');

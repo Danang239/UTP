@@ -13,99 +13,136 @@ class OwnerEditProfileView extends GetView<OwnerProfileViewModel> {
       final isLoading = controller.isLoading.value;
 
       return Scaffold(
-        backgroundColor: Colors.grey[100],
-        appBar: AppBar(
-          title: const Text(
-            'Edit Profil Owner',
-            style: TextStyle(fontWeight: FontWeight.bold),
-          ),
-          backgroundColor: Colors.white,
-          foregroundColor: Colors.black,
-          elevation: 0.5,
-        ),
-        body: SafeArea(
-          child: Stack(
-            children: [
-              SingleChildScrollView(
-                padding: const EdgeInsets.all(20),
-                child: Column(
-                  children: [
-                    const SizedBox(height: 8),
+        backgroundColor: const Color(0xFFF5F6FA),
+        body: Stack(
+          children: [
+            SingleChildScrollView(
+              child: Column(
+                children: [
+                  // ================= HEADER =================
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.fromLTRB(20, 56, 20, 32),
+                    decoration: const BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [
+                          Color.fromARGB(255, 255, 255, 255),
+                          Color.fromARGB(255, 255, 255, 255),
+                        ],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      ),
+                      borderRadius: BorderRadius.only(
+                        bottomLeft: Radius.circular(28),
+                        bottomRight: Radius.circular(28),
+                      ),
+                    ),
+                    child: Column(
+                      children: [
+                        Row(
+                          children: [
+                            IconButton(
+                              onPressed: () => Get.back(),
+                              icon: const Icon(Icons.arrow_back_ios,
+                                  color: Colors.white),
+                            ),
+                            const Spacer(),
+                            const Text(
+                              'Edit Profil',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 18,
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                            const Spacer(),
+                          ],
+                        ),
+                        const SizedBox(height: 20),
 
-                    // ======================
-                    // AVATAR + GANTI FOTO
-                    // ======================
-                    Center(
-                      child: Stack(
-                        children: [
-                          CircleAvatar(
-                            radius: 48,
-                            backgroundColor: Colors.grey[300],
-                            backgroundImage:
-                                controller.profileImg.value.isNotEmpty
-                                    ? NetworkImage(
-                                        controller.profileImg.value,
+                        // AVATAR
+                        Stack(
+                          children: [
+                            Container(
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                border: Border.all(
+                                  color: Colors.white,
+                                  width: 3,
+                                ),
+                              ),
+                              child: CircleAvatar(
+                                radius: 48,
+                                backgroundColor: Colors.white24,
+                                backgroundImage:
+                                    controller.profileImg.value.isNotEmpty
+                                        ? NetworkImage(
+                                            controller.profileImg.value,
+                                          )
+                                        : null,
+                                child: controller.profileImg.value.isEmpty
+                                    ? const Icon(
+                                        Icons.person,
+                                        size: 46,
+                                        color: Colors.white,
                                       )
                                     : null,
-                            child: controller.profileImg.value.isEmpty
-                                ? const Icon(
-                                    Icons.person,
-                                    size: 48,
+                              ),
+                            ),
+                            Positioned(
+                              bottom: 0,
+                              right: 0,
+                              child: InkWell(
+                                onTap:
+                                    controller.pickAndUploadProfileImage,
+                                child: Container(
+                                  padding: const EdgeInsets.all(8),
+                                  decoration: BoxDecoration(
                                     color: Colors.white,
-                                  )
-                                : null,
-                          ),
-                          Positioned(
-                            right: 0,
-                            bottom: 0,
-                            child: InkWell(
-                              onTap: controller.pickAndUploadProfileImage,
-                              child: Container(
-                                padding: const EdgeInsets.all(6),
-                                decoration: BoxDecoration(
-                                  color: const Color(0xFF0f70ff),
-                                  shape: BoxShape.circle,
-                                  boxShadow: [
-                                    BoxShadow(
-                                      color: Colors.black.withOpacity(0.3),
-                                      blurRadius: 4,
-                                      offset: const Offset(0, 2),
-                                    ),
-                                  ],
-                                ),
-                                child: const Icon(
-                                  Icons.camera_alt,
-                                  size: 18,
-                                  color: Colors.white,
+                                    shape: BoxShape.circle,
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: Colors.black.withOpacity(0.2),
+                                        blurRadius: 6,
+                                      ),
+                                    ],
+                                  ),
+                                  child: const Icon(
+                                    Icons.camera_alt,
+                                    size: 18,
+                                    color: Color(0xFF6C63FF),
+                                  ),
                                 ),
                               ),
                             ),
-                          ),
-                        ],
-                      ),
+                          ],
+                        ),
+                      ],
                     ),
+                  ),
 
-                    const SizedBox(height: 24),
+                  const SizedBox(height: 24),
 
-                    // ======================
-                    // FORM PROFILE
-                    // ======================
-                    _ProfileFormCard(controller: controller),
+                  // ================= FORM CARD =================
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                    child: _ProfileFormCard(controller: controller),
+                  ),
 
-                    const SizedBox(height: 24),
-                  ],
+                  const SizedBox(height: 32),
+                ],
+              ),
+            ),
+
+            // ================= LOADING =================
+            if (isLoading)
+              Container(
+                color: Colors.black.withOpacity(0.2),
+                child: const Center(
+                  child: CircularProgressIndicator(color: Colors.white),
                 ),
               ),
-
-              if (isLoading)
-                Container(
-                  color: Colors.black.withOpacity(0.15),
-                  child: const Center(
-                    child: CircularProgressIndicator(),
-                  ),
-                ),
-            ],
-          ),
+          ],
         ),
       );
     });
@@ -138,7 +175,6 @@ class _ProfileFormCardState extends State<_ProfileFormCard> {
     passwordC = TextEditingController();
     confirmPasswordC = TextEditingController();
 
-    // sinkron dengan perubahan di controller
     ever<String>(widget.controller.name, (v) => nameC.text = v);
     ever<String>(widget.controller.phone, (v) => phoneC.text = v);
   }
@@ -154,85 +190,89 @@ class _ProfileFormCardState extends State<_ProfileFormCard> {
 
   @override
   Widget build(BuildContext context) {
-    return Card(
-      elevation: 4,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(18),
+    return Container(
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.06),
+            blurRadius: 16,
+            offset: const Offset(0, 8),
+          ),
+        ],
       ),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          children: [
-            _textField(
-              controller: nameC,
-              label: 'Nama',
-              icon: Icons.person_outline,
+      child: Column(
+        children: [
+          _input(
+            controller: nameC,
+            label: 'Nama',
+            icon: Icons.person_outline,
+          ),
+          const SizedBox(height: 14),
+
+          Obx(
+            () => _readOnly(
+              label: 'Email',
+              value: widget.controller.email.value,
+              icon: Icons.email_outlined,
             ),
-            const SizedBox(height: 12),
+          ),
+          const SizedBox(height: 14),
 
-            Obx(
-              () => _readOnlyField(
-                label: 'Email',
-                value: widget.controller.email.value,
-                icon: Icons.email_outlined,
-              ),
-            ),
+          _input(
+            controller: phoneC,
+            label: 'Nomor Telepon',
+            icon: Icons.phone_outlined,
+            keyboardType: TextInputType.phone,
+          ),
 
-            const SizedBox(height: 12),
+          const Divider(height: 32),
 
-            _textField(
-              controller: phoneC,
-              label: 'Nomor Telepon',
-              icon: Icons.phone_outlined,
-              keyboardType: TextInputType.phone,
-            ),
+          _input(
+            controller: passwordC,
+            label: 'Password Baru (opsional)',
+            icon: Icons.lock_outline,
+            obscure: true,
+          ),
+          const SizedBox(height: 14),
 
-            const SizedBox(height: 16),
+          _input(
+            controller: confirmPasswordC,
+            label: 'Konfirmasi Password',
+            icon: Icons.lock_reset,
+            obscure: true,
+          ),
+          const SizedBox(height: 24),
 
-            // ======================
-            // PASSWORD BARU (OPSIONAL)
-            // ======================
-            _textField(
-              controller: passwordC,
-              label: 'Password Baru (opsional)',
-              icon: Icons.lock_outline,
-              obscure: true,
-            ),
-
-            const SizedBox(height: 12),
-
-            _textField(
-              controller: confirmPasswordC,
-              label: 'Konfirmasi Password',
-              icon: Icons.lock_reset,
-              obscure: true,
-            ),
-
-            const SizedBox(height: 20),
-
-            SizedBox(
-              width: double.infinity,
-              child: OutlinedButton.icon(
-                style: OutlinedButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(vertical: 12),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton.icon(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF6C63FF),
+                padding: const EdgeInsets.symmetric(vertical: 14),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(14),
                 ),
-                icon: const Icon(Icons.save_outlined),
-                label: const Text('Simpan Perubahan'),
-                onPressed: _onSavePressed,
               ),
+              icon: const Icon(Icons.save, color: Colors.white),
+              label: const Text(
+                'Simpan Perubahan',
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
+                ),
+              ),
+              onPressed: _onSavePressed,
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
 
-  // ===================================================
-  // ACTION SIMPAN
-  // ===================================================
+  // ================= ACTION =================
   Future<void> _onSavePressed() async {
     final newName = nameC.text.trim();
     final newPhone = phoneC.text.trim();
@@ -244,9 +284,6 @@ class _ProfileFormCardState extends State<_ProfileFormCard> {
       return;
     }
 
-    // ======================
-    // GANTI PASSWORD (OPSIONAL)
-    // ======================
     if (newPassword.isNotEmpty) {
       if (newPassword.length < 6) {
         Get.snackbar('Error', 'Password minimal 6 karakter');
@@ -269,19 +306,14 @@ class _ProfileFormCardState extends State<_ProfileFormCard> {
       }
     }
 
-    // ======================
-    // UPDATE NAMA & PHONE
-    // ======================
     await widget.controller.updateProfile(
       newName: newName,
       newPhone: newPhone,
     );
   }
 
-  // ===================================================
-  // WIDGET HELPER
-  // ===================================================
-  Widget _textField({
+  // ================= UI HELPERS =================
+  Widget _input({
     required TextEditingController controller,
     required String label,
     required IconData icon,
@@ -293,32 +325,34 @@ class _ProfileFormCardState extends State<_ProfileFormCard> {
       keyboardType: keyboardType,
       obscureText: obscure,
       decoration: InputDecoration(
-        prefixIcon: Icon(icon),
         labelText: label,
+        prefixIcon: Icon(icon),
         filled: true,
-        fillColor: Colors.grey[50],
+        fillColor: const Color(0xFFF7F8FC),
         border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(14),
+          borderSide: BorderSide.none,
         ),
       ),
     );
   }
 
-  Widget _readOnlyField({
+  Widget _readOnly({
     required String label,
     required String value,
     required IconData icon,
   }) {
     return TextField(
-      controller: TextEditingController(text: value),
       enabled: false,
+      controller: TextEditingController(text: value),
       decoration: InputDecoration(
-        prefixIcon: Icon(icon),
         labelText: label,
+        prefixIcon: Icon(icon),
         filled: true,
-        fillColor: Colors.grey[100],
+        fillColor: const Color(0xFFF0F1F6),
         border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(14),
+          borderSide: BorderSide.none,
         ),
       ),
     );

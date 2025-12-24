@@ -45,7 +45,7 @@ class ChatRoomView extends GetView<ChatRoomViewModel> {
                         final bool isMe =
                             sender == AppSession.userDocId;
 
-                        // ❗ BUBBLE CHAT TETAP (TIDAK IKUT THEME)
+                      
                         return Align(
                           alignment: isMe
                               ? Alignment.centerRight

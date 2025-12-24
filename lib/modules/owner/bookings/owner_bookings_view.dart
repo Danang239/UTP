@@ -8,7 +8,6 @@ class OwnerBookingsView extends GetView<OwnerBookingsViewModel> {
   const OwnerBookingsView({super.key});
 
   /// Ambil nama user dari collection `users`
-  /// fallback ke userId kalau gagal
   Future<String> _getUserName(String userId) async {
     try {
       final doc = await FirebaseFirestore.instance
@@ -29,41 +28,50 @@ class OwnerBookingsView extends GetView<OwnerBookingsViewModel> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.grey[100],
+      backgroundColor: const Color(0xFFF5F6FA),
       appBar: AppBar(
         title: const Text(
           'Riwayat Booking',
-          style: TextStyle(fontWeight: FontWeight.bold),
+          style: TextStyle(fontWeight: FontWeight.w700),
         ),
         centerTitle: true,
+        backgroundColor: Colors.white,
+        foregroundColor: Colors.black,
+        elevation: 0.5,
       ),
       body: Obx(() {
-        // ERROR
         if (controller.errorMessage.value != null) {
           return Center(
             child: Text(controller.errorMessage.value!),
           );
         }
 
-        // LOADING
         if (controller.isLoading.value) {
           return const Center(child: CircularProgressIndicator());
         }
 
         final docs = controller.bookings;
 
-        // EMPTY STATE
         if (docs.isEmpty) {
           return const Center(
-            child: Text('Belum ada booking untuk villa Anda.'),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(Icons.receipt_long_outlined,
+                    size: 48, color: Colors.grey),
+                SizedBox(height: 12),
+                Text(
+                  'Belum ada booking untuk villa Anda',
+                  style: TextStyle(color: Colors.grey),
+                ),
+              ],
+            ),
           );
         }
 
-        // LIST DATA
-        return ListView.separated(
+        return ListView.builder(
           padding: const EdgeInsets.all(16),
           itemCount: docs.length,
-          separatorBuilder: (_, __) => const SizedBox(height: 12),
           itemBuilder: (context, index) {
             final data = docs[index].data() as Map<String, dynamic>;
 
@@ -107,94 +115,134 @@ class OwnerBookingsView extends GetView<OwnerBookingsViewModel> {
             }
 
             return Container(
-              padding: const EdgeInsets.all(14),
+              margin: const EdgeInsets.only(bottom: 14),
+              padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
                 color: Colors.white,
-                borderRadius: BorderRadius.circular(14),
+                borderRadius: BorderRadius.circular(18),
                 boxShadow: [
                   BoxShadow(
-                    blurRadius: 6,
-                    offset: const Offset(0, 3),
-                    color: Colors.black.withOpacity(0.06),
+                    color: Colors.black.withOpacity(0.05),
+                    blurRadius: 14,
+                    offset: const Offset(0, 6),
                   ),
                 ],
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // VILLA
+                  // ================= VILLA =================
                   Text(
                     villaName,
                     style: const TextStyle(
                       fontSize: 16,
-                      fontWeight: FontWeight.bold,
+                      fontWeight: FontWeight.w700,
                     ),
                   ),
                   const SizedBox(height: 4),
-                  Text(
-                    villaLocation,
-                    style: const TextStyle(
-                      fontSize: 13,
-                      color: Colors.grey,
-                    ),
+                  Row(
+                    children: [
+                      const Icon(Icons.location_on_outlined,
+                          size: 14, color: Colors.grey),
+                      const SizedBox(width: 4),
+                      Expanded(
+                        child: Text(
+                          villaLocation,
+                          style: const TextStyle(
+                            fontSize: 13,
+                            color: Colors.grey,
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
 
-                  const SizedBox(height: 8),
+                  const Divider(height: 24),
 
-                  // TAMU (NAMA USER)
+                  // ================= TAMU =================
                   FutureBuilder<String>(
                     future: _getUserName(userId),
                     builder: (context, snapshot) {
                       final name = snapshot.data ?? userId;
-                      return Text(
-                        'Tamu: $name',
-                        style: const TextStyle(fontSize: 13),
+                      return Row(
+                        children: [
+                          const Icon(Icons.person_outline,
+                              size: 16, color: Colors.black54),
+                          const SizedBox(width: 6),
+                          Text(
+                            'Tamu: $name',
+                            style: const TextStyle(fontSize: 13),
+                          ),
+                        ],
                       );
                     },
                   ),
 
-                  const SizedBox(height: 4),
-                  Text(
-                    dateText,
-                    style: const TextStyle(fontSize: 13),
+                  const SizedBox(height: 6),
+
+                  // ================= DATE =================
+                  Row(
+                    children: [
+                      const Icon(Icons.date_range_outlined,
+                          size: 16, color: Colors.black54),
+                      const SizedBox(width: 6),
+                      Text(
+                        dateText,
+                        style: const TextStyle(fontSize: 13),
+                      ),
+                    ],
                   ),
 
-                  const SizedBox(height: 4),
-                  Text(
-                    'Total: Rp $totalPrice',
-                    style: const TextStyle(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w600,
-                    ),
+                  const SizedBox(height: 6),
+
+                  // ================= PRICE =================
+                  Row(
+                    children: [
+                      const Icon(Icons.payments_outlined,
+                          size: 16, color: Colors.black54),
+                      const SizedBox(width: 6),
+                      Text(
+                        'Total: Rp $totalPrice',
+                        style: const TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
                   ),
 
                   if (ownerIncome > 0) ...[
-                    const SizedBox(height: 4),
-                    Text(
-                      'Pendapatan owner: Rp $ownerIncome',
-                      style: const TextStyle(fontSize: 13),
+                    const SizedBox(height: 6),
+                    Row(
+                      children: [
+                        const Icon(Icons.account_balance_wallet_outlined,
+                            size: 16, color: Colors.black54),
+                        const SizedBox(width: 6),
+                        Text(
+                          'Pendapatan Owner: Rp $ownerIncome',
+                          style: const TextStyle(fontSize: 13),
+                        ),
+                      ],
                     ),
                   ],
 
-                  const SizedBox(height: 10),
+                  const SizedBox(height: 14),
 
-                  // STATUS
+                  // ================= STATUS =================
                   Row(
                     children: [
                       Container(
                         padding: const EdgeInsets.symmetric(
-                          horizontal: 10,
-                          vertical: 4,
-                        ),
+                            horizontal: 12, vertical: 6),
                         decoration: BoxDecoration(
                           color: statusColor.withOpacity(0.12),
                           borderRadius: BorderRadius.circular(20),
                         ),
                         child: Text(
-                          status,
+                          status.toUpperCase(),
                           style: TextStyle(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w600,
+                            fontSize: 11,
+                            fontWeight: FontWeight.w700,
                             color: statusColor,
                           ),
                         ),

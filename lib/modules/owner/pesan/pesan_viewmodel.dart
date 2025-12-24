@@ -8,11 +8,11 @@ class OwnerChatSummary {
   final String userId;
   final String ownerId;
   final String villaId;
-  final String userName;    // sementara pakai 'User' saja
-  final String villaName;   // kosong kalau belum ada field-nya
+  final String userName; // ✅ sekarang REAL dari collection users
+  final String villaName;
   final String lastMessage;
   final DateTime? lastTimestamp;
-  final int unreadCount;    // sementara 0 (belum dipakai)
+  final int unreadCount;
 
   OwnerChatSummary({
     required this.chatId,
@@ -26,7 +26,6 @@ class OwnerChatSummary {
     required this.unreadCount,
   });
 
-  /// Teks waktu singkat untuk di UI (kanan atas tile)
   String get timeText {
     if (lastTimestamp == null) return '';
     final now = DateTime.now();
@@ -37,26 +36,6 @@ class OwnerChatSummary {
     if (diff.inHours < 24) return '${diff.inHours} jam';
 
     return '${lastTimestamp!.day}/${lastTimestamp!.month}';
-  }
-
-  factory OwnerChatSummary.fromDoc(DocumentSnapshot doc) {
-    final data = doc.data() as Map<String, dynamic>? ?? {};
-
-    return OwnerChatSummary(
-      chatId: doc.id,
-      userId: data['user_id']?.toString() ?? '',
-      ownerId: data['owner_id']?.toString() ?? '',
-      villaId: data['villa_id']?.toString() ?? '',
-      // kalau belum ada field user_name / villa_name, pakai default simple
-      userName: data['user_name']?.toString() ?? 'User',
-      villaName: data['villa_name']?.toString() ?? '',
-      lastMessage: data['last_message']?.toString() ?? '',
-      lastTimestamp: (data['last_timestamp'] is Timestamp)
-          ? (data['last_timestamp'] as Timestamp).toDate()
-          : null,
-      // belum ada field unread di Firestore → 0 dulu
-      unreadCount: 0,
-    );
   }
 }
 
@@ -76,26 +55,67 @@ class OwnerPesanViewModel extends GetxController {
     }
   }
 
+  /// ================================
+  /// AMBIL NAMA USER DARI COLLECTION users
+  /// ================================
+  Future<String> _getUserName(String userId) async {
+    try {
+      final doc =
+          await _db.collection('users').doc(userId).get();
+      if (doc.exists) {
+        return doc.data()?['name'] ?? userId;
+      }
+      return userId;
+    } catch (_) {
+      return userId;
+    }
+  }
+
+  /// ================================
+  /// LISTEN CHAT OWNER
+  /// ================================
   void _listenOwnerChats() {
     isLoading.value = true;
 
-    // GANTI nama koleksi di sini kalau di Firestore kamu beda (misal "chat_rooms")
     _db
-        .collection('chats')
+        .collection('chats') // sesuaikan kalau nama koleksi beda
         .where('owner_id', isEqualTo: ownerId)
-        // sementara TANPA orderBy supaya tidak butuh index komposit
         .snapshots()
         .listen(
-      (snapshot) {
-        final list =
-            snapshot.docs.map((d) => OwnerChatSummary.fromDoc(d)).toList();
+      (snapshot) async {
+        final List<OwnerChatSummary> temp = [];
 
-        // debug: lihat di console berapa chat yang ketemu
-        // ignore: avoid_print
-        print('OwnerPesanViewModel: loaded ${list.length} chat(s) for ownerId=$ownerId');
+        for (final doc in snapshot.docs) {
+          final data = doc.data();
 
-        chats.assignAll(list);
+          final userId = data['user_id']?.toString() ?? '';
+          final userName = await _getUserName(userId);
+
+          temp.add(
+            OwnerChatSummary(
+              chatId: doc.id,
+              userId: userId,
+              ownerId: data['owner_id']?.toString() ?? '',
+              villaId: data['villa_id']?.toString() ?? '',
+              userName: userName, // 🔥 NAMA ASLI USER
+              villaName: data['villa_name']?.toString() ?? '',
+              lastMessage: data['last_message']?.toString() ?? '',
+              lastTimestamp: (data['last_timestamp'] is Timestamp)
+                  ? (data['last_timestamp'] as Timestamp).toDate()
+                  : null,
+              unreadCount: 0,
+            ),
+          );
+        }
+
+        chats.assignAll(temp);
         isLoading.value = false;
+
+        // debug
+        // ignore: avoid_print
+        print(
+          'OwnerPesanViewModel: loaded ${temp.length} chat(s) with real user names',
+        );
       },
       onError: (e) {
         // ignore: avoid_print

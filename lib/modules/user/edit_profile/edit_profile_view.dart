@@ -128,21 +128,32 @@ class EditProfileView extends GetView<EditProfileViewModel> {
 
             const SizedBox(height: 18),
 
-            // ================= EMAIL =================
+            // ================= EMAIL (READ ONLY) =================
             _inputField(
               context,
               controller: controller.emailC,
               label: "Email",
               keyboardType: TextInputType.emailAddress,
+              readOnly: true,
             ),
 
             const SizedBox(height: 18),
 
-            // ================= PASSWORD =================
+            // ================= PASSWORD BARU =================
             _inputField(
               context,
               controller: controller.passwordC,
               label: "Password Baru (opsional)",
+              obscureText: true,
+            ),
+
+            const SizedBox(height: 18),
+
+            // ================= KONFIRMASI PASSWORD =================
+            _inputField(
+              context,
+              controller: controller.confirmPasswordC,
+              label: "Konfirmasi Password",
               obscureText: true,
             ),
 
@@ -163,7 +174,7 @@ class EditProfileView extends GetView<EditProfileViewModel> {
                   elevation: 2,
                 ),
                 child: const Text(
-                  "Simpan",
+                  "Simpan Perubahan",
                   style: TextStyle(fontSize: 16),
                 ),
               ),
@@ -182,6 +193,7 @@ class EditProfileView extends GetView<EditProfileViewModel> {
     required TextEditingController controller,
     required String label,
     bool obscureText = false,
+    bool readOnly = false,
     TextInputType? keyboardType,
   }) {
     final theme = Theme.of(context);
@@ -190,11 +202,14 @@ class EditProfileView extends GetView<EditProfileViewModel> {
       controller: controller,
       obscureText: obscureText,
       keyboardType: keyboardType,
+      readOnly: readOnly,
       style: theme.textTheme.bodyLarge,
       decoration: InputDecoration(
         labelText: label,
         filled: true,
-        fillColor: theme.colorScheme.surfaceVariant,
+        fillColor: readOnly
+            ? theme.disabledColor.withOpacity(0.1)
+            : theme.colorScheme.surfaceVariant,
         labelStyle: TextStyle(
           color: theme.colorScheme.onSurface.withOpacity(0.7),
         ),
